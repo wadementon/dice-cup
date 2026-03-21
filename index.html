@@ -504,37 +504,124 @@
     <div class="cup-wrapper">
       <div id="cup">
         <!-- Cup SVG -->
-        <svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 120 168" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="cupGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#2a1208"/>
-              <stop offset="30%" style="stop-color:#5c3010"/>
-              <stop offset="70%" style="stop-color:#4a2508"/>
-              <stop offset="100%" style="stop-color:#1e0c04"/>
+            <!-- Main leather body: dark edges, warm highlight on left-center -->
+            <linearGradient id="cupBodyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#120603"/>
+              <stop offset="15%"  stop-color="#2e1106"/>
+              <stop offset="38%"  stop-color="#6b3318"/>
+              <stop offset="55%"  stop-color="#5a2910"/>
+              <stop offset="78%"  stop-color="#2e1106"/>
+              <stop offset="100%" stop-color="#120603"/>
             </linearGradient>
+            <!-- Radial sheen: subtle warm gloss on upper-left face -->
+            <radialGradient id="cupSheen" cx="35%" cy="25%" r="52%">
+              <stop offset="0%"   stop-color="rgba(255,175,70,0.22)"/>
+              <stop offset="55%"  stop-color="rgba(255,110,20,0.05)"/>
+              <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+            </radialGradient>
+            <!-- Gold rim -->
             <linearGradient id="cupRimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:#7a5f1e"/>
-              <stop offset="50%" style="stop-color:#c9a84c"/>
-              <stop offset="100%" style="stop-color:#7a5f1e"/>
+              <stop offset="0%"   stop-color="#4a3008"/>
+              <stop offset="22%"  stop-color="#c9a84c"/>
+              <stop offset="48%"  stop-color="#f5d878"/>
+              <stop offset="65%"  stop-color="#c9a84c"/>
+              <stop offset="82%"  stop-color="#9a7020"/>
+              <stop offset="100%" stop-color="#4a3008"/>
             </linearGradient>
-            <linearGradient id="cupInner" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#0a0804; stop-opacity:1"/>
-              <stop offset="100%" style="stop-color:#1a1208; stop-opacity:1"/>
+            <!-- Gold base ring -->
+            <linearGradient id="cupBaseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#3a2208"/>
+              <stop offset="30%"  stop-color="#d4ae50"/>
+              <stop offset="52%"  stop-color="#f0c840"/>
+              <stop offset="75%"  stop-color="#b08828"/>
+              <stop offset="100%" stop-color="#3a2208"/>
             </linearGradient>
+            <!-- Dark inner opening -->
+            <radialGradient id="cupInnerGrad" cx="50%" cy="35%" r="65%">
+              <stop offset="0%"  stop-color="#110804"/>
+              <stop offset="100%" stop-color="#040201"/>
+            </radialGradient>
+            <!-- Drop shadow -->
+            <filter id="cupDropShadow" x="-25%" y="-10%" width="150%" height="135%">
+              <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="rgba(0,0,0,0.75)"/>
+            </filter>
           </defs>
-          <!-- Inner shadow / opening -->
-          <ellipse cx="60" cy="18" rx="38" ry="10" fill="url(#cupInner)" stroke="#0a0804" stroke-width="1"/>
-          <!-- Cup body -->
-          <path d="M22,18 Q18,90 25,145 Q60,158 95,145 Q102,90 98,18 Z" fill="url(#cupGrad)"/>
-          <!-- Highlight strip -->
-          <path d="M38,22 Q35,90 38,140" stroke="rgba(255,200,100,0.12)" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <!-- Rim -->
-          <ellipse cx="60" cy="18" rx="38" ry="10" fill="none" stroke="url(#cupRimGrad)" stroke-width="5"/>
-          <!-- Base ring -->
-          <ellipse cx="60" cy="145" rx="34" ry="8" fill="none" stroke="url(#cupRimGrad)" stroke-width="4"/>
-          <!-- Tooling lines -->
-          <path d="M24,55 Q60,60 96,55" stroke="rgba(201,168,76,0.25)" stroke-width="1.5" fill="none"/>
-          <path d="M23,80 Q60,85 97,80" stroke="rgba(201,168,76,0.2)" stroke-width="1" fill="none"/>
+
+          <g filter="url(#cupDropShadow)">
+            <!-- ── BODY ── tapered silhouette, slight waist -->
+            <path d="M19,23 C15,72 15,112 21,152 Q60,167 99,152 C105,112 105,72 101,23 Z"
+                  fill="url(#cupBodyGrad)"/>
+            <!-- Sheen overlay -->
+            <path d="M19,23 C15,72 15,112 21,152 Q60,167 99,152 C105,112 105,72 101,23 Z"
+                  fill="url(#cupSheen)"/>
+
+            <!-- ── LEATHER CREASES ── -->
+            <!-- Outer shadow creases (give illusion of rounded form) -->
+            <path d="M27,25 C25,74 25,114 29,152"
+                  stroke="rgba(0,0,0,0.38)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M93,25 C95,74 95,114 91,152"
+                  stroke="rgba(0,0,0,0.38)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <!-- Subtle highlight crease left of center -->
+            <path d="M44,24 C43,74 43,114 44,152"
+                  stroke="rgba(255,155,50,0.11)" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <!-- Center spine highlight -->
+            <path d="M60,23 C60,74 60,114 60,152"
+                  stroke="rgba(255,170,60,0.07)" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+            <!-- ── HORIZONTAL TOOLING BANDS ── two decorative grooves -->
+            <!-- Band 1 (upper) -->
+            <path d="M20,65 C42,71 78,71 100,65"
+                  stroke="rgba(0,0,0,0.30)" stroke-width="2" fill="none"/>
+            <path d="M20,67 C42,73 78,73 100,67"
+                  stroke="rgba(255,150,40,0.10)" stroke-width="1" fill="none"/>
+            <!-- Band 2 (lower) -->
+            <path d="M19,105 C42,112 78,112 101,105"
+                  stroke="rgba(0,0,0,0.26)" stroke-width="2" fill="none"/>
+            <path d="M19,107 C42,114 78,114 101,107"
+                  stroke="rgba(255,150,40,0.09)" stroke-width="1" fill="none"/>
+
+            <!-- ── STITCHING on tooling bands ── -->
+            <path d="M23,62 C42,68 78,68 97,62"
+                  stroke="rgba(201,168,76,0.32)" stroke-width="1.2"
+                  fill="none" stroke-dasharray="3.5,3" stroke-linecap="round"/>
+            <path d="M22,102 C42,109 78,109 98,102"
+                  stroke="rgba(201,168,76,0.28)" stroke-width="1.2"
+                  fill="none" stroke-dasharray="3.5,3" stroke-linecap="round"/>
+
+            <!-- ── BASE BRASS BAND ── -->
+            <ellipse cx="60" cy="152" rx="39" ry="10" fill="#5a3a0e"/>
+            <ellipse cx="60" cy="152" rx="39" ry="10"
+                     fill="none" stroke="url(#cupBaseGrad)" stroke-width="5.5"/>
+            <path d="M23,150 Q60,146 97,150"
+                  stroke="rgba(255,225,100,0.45)" stroke-width="1" fill="none"/>
+            <path d="M23,154 Q60,158 97,154"
+                  stroke="rgba(0,0,0,0.35)" stroke-width="1" fill="none"/>
+
+            <!-- ── RIM BRASS COLLAR ── -->
+            <ellipse cx="60" cy="23" rx="42" ry="12" fill="#6a440e"/>
+            <ellipse cx="60" cy="23" rx="42" ry="12"
+                     fill="none" stroke="url(#cupRimGrad)" stroke-width="7"/>
+            <!-- Rim top catch-light -->
+            <path d="M20,19 Q60,13 100,19"
+                  stroke="rgba(255,235,130,0.60)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- Rim bottom shadow -->
+            <path d="M20,27 Q60,33 100,27"
+                  stroke="rgba(0,0,0,0.45)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <!-- Tiny rivet dots on rim -->
+            <circle cx="28"  cy="23" r="2.2" fill="#c9a84c" opacity="0.7"/>
+            <circle cx="60"  cy="14" r="2.2" fill="#c9a84c" opacity="0.7"/>
+            <circle cx="92"  cy="23" r="2.2" fill="#c9a84c" opacity="0.7"/>
+
+            <!-- ── INNER OPENING ── -->
+            <ellipse cx="60" cy="21" rx="35" ry="9" fill="url(#cupInnerGrad)"/>
+            <ellipse cx="60" cy="21" rx="35" ry="9"
+                     fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2"/>
+            <!-- Inner rim glint -->
+            <path d="M28,18 Q60,13 92,18"
+                  stroke="rgba(255,200,80,0.18)" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </g>
         </svg>
         <div class="cup-dice-count" id="cupCount"></div>
       </div>
