@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice Cup</title>
+<link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt: #1a3a2a;
+    --felt-light: #214d38;
+    --felt-edge: #0f2218;
+    --gold: #c9a84c;
+    --gold-bright: #f0c84a;
+    --gold-dim: #7a5f1e;
+    --cream: #f5e6c8;
+    --ink: #1a1208;
+    --shadow: rgba(0,0,0,0.6);
+    --wood: #3d1f0a;
+    --wood-light: #5c3010;
+    --dice-white: #f2ead8;
+    --dice-shadow: rgba(0,0,0,0.45);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--wood);
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,0,0,0.04) 40px, rgba(0,0,0,0.04) 41px),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,0,0,0.04) 40px, rgba(0,0,0,0.04) 41px),
+      radial-gradient(ellipse at 20% 50%, rgba(100,50,0,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 50%, rgba(60,20,0,0.2) 0%, transparent 60%);
+    font-family: 'Crimson Text', Georgia, serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--cream);
+    user-select: none;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(180deg, #0a1a10 0%, var(--felt-edge) 100%);
+    border-bottom: 3px solid var(--gold-dim);
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    position: relative;
+    z-index: 10;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 1.4rem;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 20px rgba(201,168,76,0.5), 0 2px 4px rgba(0,0,0,0.8);
+  }
+
+  /* ── DICE PICKER BUTTONS ── */
+  .dice-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .die-btn {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+    background: none;
+    border: none;
+    padding: 0;
+  }
+  .die-btn:hover { transform: translateY(-3px) scale(1.08); filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6)) brightness(1.15); }
+  .die-btn:active { transform: translateY(0) scale(0.96); }
+
+  .die-btn svg { display: block; }
+
+  .die-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 0.65rem;
+    color: #ffffff;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    pointer-events: none;
+    letter-spacing: 0;
+  }
+
+  /* ── MAIN AREA ── */
+  main {
+    flex: 1;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* ── ROLL BOX (left) ── */
+  .roll-box {
+    flex: 1;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 50%, var(--felt-light) 0%, var(--felt) 60%, var(--felt-edge) 100%);
+    border-right: 4px solid var(--gold-dim);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* felt texture overlay */
+  .roll-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
+  .roll-box-label {
+    font-family: 'Cinzel', serif;
+    color: rgba(201,168,76,0.2);
+    font-size: 1.1rem;
+    letter-spacing: 0.3em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-transform: uppercase;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .dice-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+  }
+
+  /* ── SIDEBAR (right) ── */
+  .sidebar {
+    width: 180px;
+    min-width: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px;
+    gap: 14px;
+    background: linear-gradient(180deg, #0c1e14 0%, #0a1810 100%);
+    border-left: 2px solid var(--gold-dim);
+  }
+
+  .sidebar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── DICE CUP ── */
+  .cup-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  #cup {
+    width: 120px;
+    height: 160px;
+    position: relative;
+    cursor: grab;
+    transition: transform 0.1s;
+  }
+  #cup.shaking { cursor: grabbing; animation: shake 0.12s infinite; }
+  #cup svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.7)); }
+
+  @keyframes shake {
+    0%   { transform: rotate(-6deg) translateX(-3px); }
+    25%  { transform: rotate(5deg) translateX(4px); }
+    50%  { transform: rotate(-5deg) translateX(-4px); }
+    75%  { transform: rotate(6deg) translateX(3px); }
+    100% { transform: rotate(-6deg) translateX(-3px); }
+  }
+
+  /* dice peeking out of cup */
+  .cup-dice-count {
+    position: absolute;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--gold-bright);
+    text-shadow: 0 0 10px rgba(240,200,74,0.8);
+    pointer-events: none;
+  }
+
+  .cup-hint {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(201,168,76,0.5);
+    text-align: center;
+    line-height: 1.4;
+    max-width: 130px;
+  }
+
+  .cup-dice-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    max-width: 150px;
+    min-height: 24px;
+  }
+
+  .cup-die-chip {
+    background: var(--gold-dim);
+    color: var(--cream);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--gold);
+  }
+
+  /* ── EMPTY BUTTON ── */
+  .empty-btn {
+    background: none;
+    border: 2px solid var(--gold-dim);
+    color: var(--gold-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    border-radius: 3px;
+  }
+  .empty-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(201,168,76,0.08);
+    box-shadow: 0 0 12px rgba(201,168,76,0.2);
+  }
+
+  /* ── CHARGE BAR ── */
+  .charge-bar-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .charge-bar-wrap.visible { opacity: 1; }
+
+  .charge-bar-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .charge-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--gold-dim);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .charge-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    background: var(--gold-dim);
+  }
+
+  /* ── COLOR PICKER DROPDOWN ── */
+  .color-picker-dropdown {
+    position: fixed;
+    z-index: 1000;
+    background: #0e1d14;
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 180px;
+  }
+  .color-picker-dropdown.open { display: flex; }
+
+  .color-picker-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    text-align: center;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .color-swatches {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .color-swatch {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s, border-color 0.1s;
+  }
+  .color-swatch:hover { transform: scale(1.2); border-color: rgba(255,255,255,0.4); }
+  .color-swatch.active { border-color: white; transform: scale(1.15); }
+
+  .color-picker-custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(201,168,76,0.2);
+  }
+  .color-picker-custom label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex: 1;
+  }
+  .color-picker-custom input[type="color"] {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    background: none;
+    padding: 0;
+  }
+
+  .result-die {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    transform-origin: center;
+  }
+
+  .result-die .die-face-label {
+    position: absolute;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    color: #1a1208;
+    pointer-events: none;
+    text-shadow: none;
+    line-height: 1;
+  }
+
+  /* ── TOTAL BAR ── */
+  .total-bar {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: none;
+    border: none;
+    padding: 0;
+    border-radius: 0;
+    backdrop-filter: none;
+    opacity: 0;
+    transition: opacity 0.6s;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .total-bar.visible { opacity: 1; }
+
+  .total-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.35em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+  .total-value {
+    font-family: 'Cinzel', serif;
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--gold-bright);
+    text-shadow: 0 0 30px rgba(240,200,74,0.5);
+    line-height: 1;
+  }
+  .total-breakdown {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 500px;
+  }
+
+  .breakdown-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 6px;
+    padding: 8px 16px;
+    min-width: 64px;
+  }
+
+  .breakdown-type {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+  }
+
+  .breakdown-rolls {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--cream);
+    line-height: 1;
+  }
+
+  .breakdown-subtotal {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gold);
+    border-top: 1px solid rgba(201,168,76,0.3);
+    padding-top: 4px;
+    margin-top: 1px;
+    width: 100%;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔ Dice Cup ⚔</h1>
+  <div class="dice-bar" id="diceBar"></div>
+</header>
+
+<main>
+  <!-- Roll Box -->
+  <div class="roll-box" id="rollBox">
+    <div class="roll-box-label" id="rollBoxLabel">Release to Roll</div>
+    <canvas class="dice-canvas" id="diceCanvas"></canvas>
+    <div class="total-bar" id="totalBar">
+      <span class="total-label">Total</span>
+      <span class="total-value" id="totalValue">0</span>
+      <div class="total-breakdown" id="totalBreakdown"></div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-title">Dice Cup</div>
+    <div class="cup-wrapper">
+      <div id="cup">
+        <!-- Cup SVG -->
+        <svg viewBox="0 0 120 160" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="cupGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#2a1208"/>
+              <stop offset="30%" style="stop-color:#5c3010"/>
+              <stop offset="70%" style="stop-color:#4a2508"/>
+              <stop offset="100%" style="stop-color:#1e0c04"/>
+            </linearGradient>
+            <linearGradient id="cupRimGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#7a5f1e"/>
+              <stop offset="50%" style="stop-color:#c9a84c"/>
+              <stop offset="100%" style="stop-color:#7a5f1e"/>
+            </linearGradient>
+            <linearGradient id="cupInner" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#0a0804; stop-opacity:1"/>
+              <stop offset="100%" style="stop-color:#1a1208; stop-opacity:1"/>
+            </linearGradient>
+          </defs>
+          <!-- Inner shadow / opening -->
+          <ellipse cx="60" cy="18" rx="38" ry="10" fill="url(#cupInner)" stroke="#0a0804" stroke-width="1"/>
+          <!-- Cup body -->
+          <path d="M22,18 Q18,90 25,145 Q60,158 95,145 Q102,90 98,18 Z" fill="url(#cupGrad)"/>
+          <!-- Highlight strip -->
+          <path d="M38,22 Q35,90 38,140" stroke="rgba(255,200,100,0.12)" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- Rim -->
+          <ellipse cx="60" cy="18" rx="38" ry="10" fill="none" stroke="url(#cupRimGrad)" stroke-width="5"/>
+          <!-- Base ring -->
+          <ellipse cx="60" cy="145" rx="34" ry="8" fill="none" stroke="url(#cupRimGrad)" stroke-width="4"/>
+          <!-- Tooling lines -->
+          <path d="M24,55 Q60,60 96,55" stroke="rgba(201,168,76,0.25)" stroke-width="1.5" fill="none"/>
+          <path d="M23,80 Q60,85 97,80" stroke="rgba(201,168,76,0.2)" stroke-width="1" fill="none"/>
+        </svg>
+        <div class="cup-dice-count" id="cupCount"></div>
+      </div>
+      <div class="cup-dice-list" id="cupDiceList"></div>
+      <div class="cup-hint" id="cupHint">Hold &amp; shake,<br>release to roll</div>
+    </div>
+    <div class="charge-bar-wrap" id="chargeBarWrap">
+      <div class="charge-bar-label" id="chargeBarLabel">Charge</div>
+      <div class="charge-bar-track">
+        <div class="charge-bar-fill" id="chargeBarFill"></div>
+      </div>
+    </div>
+    <button class="empty-btn" id="emptyBtn">Empty</button>
+  </div>
+</main>
+
+<!-- Color Picker Dropdown -->
+<div class="color-picker-dropdown" id="colorPickerDropdown">
+  <div class="color-picker-title" id="colorPickerTitle">D6 Color</div>
+  <div class="color-swatches" id="colorSwatches"></div>
+  <div class="color-picker-custom">
+    <label for="customColorInput">Custom</label>
+    <input type="color" id="customColorInput" value="#c0392b">
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+// DICE DEFINITIONS
+// ─────────────────────────────────────────
+const DICE = [
+  { type: 'D4',  sides: 4,  color: '#c0392b', colorDark: '#7b241c', size: 52 },
+  { type: 'D6',  sides: 6,  color: '#2980b9', colorDark: '#1a5276', size: 48 },
+  { type: 'D8',  sides: 8,  color: '#8e44ad', colorDark: '#5b2c6f', size: 50 },
+  { type: 'D10', sides: 10, color: '#16a085', colorDark: '#0e6655', size: 50 },
+  { type: 'D12', sides: 12, color: '#d35400', colorDark: '#873600', size: 52 },
+  { type: 'D20', sides: 20, color: '#27ae60', colorDark: '#1e8449', size: 54 },
+];
+
+// ─────────────────────────────────────────
+// SVG SHAPES for picker buttons
+// ─────────────────────────────────────────
+function dieShape(d, size) {
+  const s = size;
+  const c = d.color, dk = d.colorDark;
+  switch(d.type) {
+    case 'D4': {
+      // Triangle
+      const h = s * 0.88;
+      const pts = `${s/2},4 ${s-4},${h} 4,${h}`;
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts}" fill="url(#g4)" stroke="${c}" stroke-width="2"/>
+        <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+    case 'D6': {
+      const r = 6;
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g6" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <rect x="3" y="3" width="${s-6}" height="${s-6}" rx="${r}" ry="${r}" fill="url(#g6)" stroke="${c}" stroke-width="2"/>
+        <rect x="3" y="3" width="${s-6}" height="${s-6}" rx="${r}" ry="${r}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+    case 'D8': {
+      const m = s/2;
+      const pts = `${m},3 ${s-3},${m} ${m},${s-3} 3,${m}`;
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g8" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts}" fill="url(#g8)" stroke="${c}" stroke-width="2"/>
+        <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+    case 'D10': {
+      // Pentagon-ish kite
+      const m = s/2;
+      const pts = `${m},3 ${s-3},${m*0.7} ${s*0.8},${s-3} ${s*0.2},${s-3} 3,${m*0.7}`;
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g10" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts}" fill="url(#g10)" stroke="${c}" stroke-width="2"/>
+        <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+    case 'D12': {
+      // Pentagon
+      const pts = pentagon(s/2, s/2, s/2 - 4);
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g12" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${pts}" fill="url(#g12)" stroke="${c}" stroke-width="2"/>
+        <polygon points="${pts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+    case 'D20': {
+      // Hexagon
+      const hexPts = hexagon(s/2, s/2, s/2 - 4);
+      return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+        <defs>
+          <linearGradient id="g20" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${c}"/><stop offset="100%" stop-color="${dk}"/>
+          </linearGradient>
+        </defs>
+        <polygon points="${hexPts}" fill="url(#g20)" stroke="${c}" stroke-width="2"/>
+        <polygon points="${hexPts}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      </svg>`;
+    }
+  }
+}
+
+function pentagon(cx, cy, r) {
+  let pts = '';
+  for (let i = 0; i < 5; i++) {
+    const a = (Math.PI * 2 * i / 5) - Math.PI / 2;
+    pts += `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)} `;
+  }
+  return pts.trim();
+}
+
+function hexagon(cx, cy, r) {
+  let pts = '';
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI * 2 * i / 6) - Math.PI / 6;
+    pts += `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)} `;
+  }
+  return pts.trim();
+}
+
+// ─────────────────────────────────────────
+// COLOR PALETTE
+// ─────────────────────────────────────────
+const COLOR_PALETTE = [
+  // Reds
+  '#e74c3c','#c0392b','#e91e63','#ad1457','#ff5252',
+  // Oranges
+  '#e67e22','#d35400','#ff6f00','#ff8f00','#ffab40',
+  // Yellows
+  '#f1c40f','#f9a825','#ffee58','#d4ac0d','#c8a415',
+  // Greens
+  '#27ae60','#1e8449','#2ecc71','#00897b','#43a047',
+  // Teals
+  '#16a085','#0e6655','#00bcd4','#0097a7','#26c6da',
+  // Blues
+  '#2980b9','#1a5276','#1976d2','#1565c0','#42a5f5',
+  // Purples
+  '#8e44ad','#5b2c6f','#9c27b0','#6a1b9a','#ab47bc',
+  // Pinks
+  '#e91e63','#880e4f','#f06292','#ec407a','#ff80ab',
+  // Grays/silvers
+  '#607d8b','#455a64','#78909c','#90a4ae','#b0bec5',
+  // Darks
+  '#263238','#37474f','#212121','#424242','#4a148c',
+];
+
+function darken(hex, amount = 0.4) {
+  const num = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, (num >> 16) - Math.round(255 * amount));
+  const g = Math.max(0, ((num >> 8) & 0xff) - Math.round(255 * amount));
+  const b = Math.max(0, (num & 0xff) - Math.round(255 * amount));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// ─────────────────────────────────────────
+// BUILD PICKER BAR
+// ─────────────────────────────────────────
+const diceBar = document.getElementById('diceBar');
+const colorPickerDropdown = document.getElementById('colorPickerDropdown');
+const colorPickerTitle = document.getElementById('colorPickerTitle');
+const colorSwatchesEl = document.getElementById('colorSwatches');
+const customColorInput = document.getElementById('customColorInput');
+
+let activeDieForColor = null;
+let longPressTimer = null;
+let longPressFired = false;
+
+function rebuildBtn(btn, d) {
+  btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
+}
+
+function openColorPicker(btn, d) {
+  activeDieForColor = d;
+  colorPickerTitle.textContent = `${d.type} Color`;
+  customColorInput.value = d.color;
+
+  // Build swatches
+  colorSwatchesEl.innerHTML = '';
+  COLOR_PALETTE.forEach(hex => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (hex === d.color ? ' active' : '');
+    sw.style.background = hex;
+    sw.addEventListener('click', e => {
+      e.stopPropagation();
+      applyColor(d, btn, hex);
+      closeColorPicker();
+    });
+    colorSwatchesEl.appendChild(sw);
+  });
+
+  // Position dropdown below the button
+  const rect = btn.getBoundingClientRect();
+  colorPickerDropdown.style.left = Math.min(rect.left, window.innerWidth - 210) + 'px';
+  colorPickerDropdown.style.top  = (rect.bottom + 6) + 'px';
+  colorPickerDropdown.classList.add('open');
+}
+
+function closeColorPicker() {
+  colorPickerDropdown.classList.remove('open');
+  activeDieForColor = null;
+}
+
+function applyColor(d, btn, hex) {
+  d.color = hex;
+  d.colorDark = darken(hex, 0.35);
+  rebuildBtn(btn, d);
+}
+
+customColorInput.addEventListener('input', () => {
+  if (!activeDieForColor) return;
+  const btn = [...diceBar.children].find(b => b._dieRef === activeDieForColor);
+  if (btn) applyColor(activeDieForColor, btn, customColorInput.value);
+});
+customColorInput.addEventListener('change', closeColorPicker);
+
+document.addEventListener('click', e => {
+  if (!colorPickerDropdown.contains(e.target) && !e.target.closest('.die-btn')) {
+    closeColorPicker();
+  }
+});
+
+DICE.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'die-btn';
+  btn._dieRef = d;
+  btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
+  btn.title = `Add ${d.type} — hold to change color`;
+
+  // Long press detection
+  btn.addEventListener('mousedown', e => {
+    longPressFired = false;
+    longPressTimer = setTimeout(() => {
+      longPressFired = true;
+      openColorPicker(btn, d);
+    }, 500);
+  });
+  btn.addEventListener('touchstart', e => {
+    longPressFired = false;
+    longPressTimer = setTimeout(() => {
+      longPressFired = true;
+      openColorPicker(btn, d);
+    }, 500);
+  }, { passive: true });
+
+  const cancelLong = () => clearTimeout(longPressTimer);
+  btn.addEventListener('mouseup', cancelLong);
+  btn.addEventListener('mouseleave', cancelLong);
+  btn.addEventListener('touchend', cancelLong);
+  btn.addEventListener('touchcancel', cancelLong);
+
+  btn.addEventListener('click', e => {
+    if (longPressFired) { longPressFired = false; return; }
+    addToCup(d);
+  });
+
+  diceBar.appendChild(btn);
+});
+
+// ─────────────────────────────────────────
+// CUP STATE
+// ─────────────────────────────────────────
+let cupDice = [];   // array of dice type strings e.g. ['D6','D6','D20']
+let rolling = false;
+let resultDice = []; // { def, value, x, y, rot, vx, vy, vrot, settled }
+
+const cup = document.getElementById('cup');
+const cupCount = document.getElementById('cupCount');
+const cupDiceList = document.getElementById('cupDiceList');
+const cupHint = document.getElementById('cupHint');
+const emptyBtn = document.getElementById('emptyBtn');
+const rollBox = document.getElementById('rollBox');
+const rollBoxLabel = document.getElementById('rollBoxLabel');
+const totalBar = document.getElementById('totalBar');
+const totalValue = document.getElementById('totalValue');
+const totalBreakdown = document.getElementById('totalBreakdown');
+const canvas = document.getElementById('diceCanvas');
+const ctx = canvas.getContext('2d');
+
+function updateCupUI() {
+  cupCount.textContent = cupDice.length > 0 ? cupDice.length : '';
+  cupDiceList.innerHTML = '';
+  // Count each type
+  const counts = {};
+  cupDice.forEach(t => counts[t] = (counts[t]||0)+1);
+  Object.entries(counts).forEach(([type, n]) => {
+    const chip = document.createElement('div');
+    chip.className = 'cup-die-chip';
+    chip.textContent = n > 1 ? `${n}×${type}` : type;
+    cupDiceList.appendChild(chip);
+  });
+  cupHint.style.opacity = cupDice.length === 0 ? '1' : '0.5';
+}
+
+function addToCup(d) {
+  if (cupDice.length >= 20) return; // cap
+  cupDice.push(d.type);
+  updateCupUI();
+}
+
+emptyBtn.addEventListener('click', () => {
+  cupDice = [];
+  updateCupUI();
+  clearResults();
+});
+
+// ─────────────────────────────────────────
+// SHAKE & ROLL
+// ─────────────────────────────────────────
+let isHolding = false;
+let holdStart = 0;
+let chargeRaf = null;
+const CHARGE_MAX_MS = 4000; // 4 seconds = full charge
+
+const chargeBarWrap = document.getElementById('chargeBarWrap');
+const chargeBarFill = document.getElementById('chargeBarFill');
+const chargeBarLabel = document.getElementById('chargeBarLabel');
+
+cup.addEventListener('mousedown', startHold);
+cup.addEventListener('touchstart', e => { e.preventDefault(); startHold(); }, { passive: false });
+
+document.addEventListener('mouseup', endHold);
+document.addEventListener('touchend', endHold);
+
+function getCharge() {
+  const held = Date.now() - holdStart;
+  return Math.min(held / CHARGE_MAX_MS, 1);
+}
+
+function updateChargeBar() {
+  if (!isHolding) return;
+  const charge = getCharge();
+  const pct = charge * 100;
+  chargeBarFill.style.width = pct + '%';
+
+  // Color: gold → orange → red as charge builds
+  if (charge < 0.4) {
+    chargeBarFill.style.background = `hsl(45, 70%, 45%)`;
+  } else if (charge < 0.75) {
+    const t = (charge - 0.4) / 0.35;
+    chargeBarFill.style.background = `hsl(${45 - t * 25}, 80%, 48%)`;
+  } else {
+    const t = (charge - 0.75) / 0.25;
+    chargeBarFill.style.background = `hsl(${20 - t * 10}, 90%, 50%)`;
+  }
+
+  // Label
+  if (charge < 0.25) chargeBarLabel.textContent = 'Gentle';
+  else if (charge < 0.5) chargeBarLabel.textContent = 'Charged';
+  else if (charge < 0.75) chargeBarLabel.textContent = 'Strong';
+  else if (charge < 0.95) chargeBarLabel.textContent = 'Powerful';
+  else chargeBarLabel.textContent = '⚡ MAX ⚡';
+
+  chargeRaf = requestAnimationFrame(updateChargeBar);
+}
+
+function startHold() {
+  if (cupDice.length === 0) return;
+  isHolding = true;
+  holdStart = Date.now();
+  cup.classList.add('shaking');
+  chargeBarWrap.classList.add('visible');
+  chargeBarFill.style.width = '0%';
+  chargeBarLabel.textContent = 'Gentle';
+  chargeRaf = requestAnimationFrame(updateChargeBar);
+}
+
+function endHold() {
+  if (!isHolding) return;
+  isHolding = false;
+  cup.classList.remove('shaking');
+  cancelAnimationFrame(chargeRaf);
+  const charge = getCharge();
+  // Fade bar out
+  chargeBarWrap.classList.remove('visible');
+  chargeBarFill.style.width = '0%';
+  const held = Date.now() - holdStart;
+  if (held > 100 && cupDice.length > 0) {
+    roll(charge);
+  }
+}
+
+function roll(charge = 1) {
+  if (rolling) return;
+  rolling = true;
+  clearResults();
+  totalBar.classList.remove('visible');
+
+  const box = rollBox.getBoundingClientRect();
+  const W = box.width;
+  const H = box.height;
+
+  // Scale velocity: gentle tap = low, full 5s hold = max
+  const minSpeed = 10;
+  const maxSpeed = 120;
+  const baseSpeed = minSpeed + (maxSpeed - minSpeed) * charge;
+  const minSpin = 0.2;
+  const maxSpin = 4.0;
+  const baseSpin = minSpin + (maxSpin - minSpin) * charge;
+
+  // Create physics dice
+  resultDice = cupDice.map(type => {
+    const def = DICE.find(d => d.type === type);
+    const value = Math.floor(Math.random() * def.sides) + 1;
+    const edge = Math.floor(Math.random() * 4);
+    let x, y, vx, vy;
+    const speed = baseSpeed * (0.8 + Math.random() * 0.4);
+    const spread = (Math.random() - 0.5) * speed * 0.7;
+    if (edge === 0) {
+      x = W * 0.15 + Math.random() * W * 0.7; y = -60;
+      vx = spread; vy = speed;
+    } else if (edge === 1) {
+      x = W * 0.15 + Math.random() * W * 0.7; y = H + 60;
+      vx = spread; vy = -speed;
+    } else if (edge === 2) {
+      x = -60; y = H * 0.1 + Math.random() * H * 0.8;
+      vx = speed; vy = spread;
+    } else {
+      x = W + 60; y = H * 0.1 + Math.random() * H * 0.8;
+      vx = -speed; vy = spread;
+    }
+    return {
+      def, value,
+      x, y,
+      vx, vy,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * baseSpin * 2,
+      settled: false,
+      bounces: 0,
+      alpha: 1,
+    };
+  });
+
+  rollBoxLabel.style.opacity = '0';
+  requestAnimationFrame(simulate);
+}
+
+function simulate() {
+  resizeCanvas();
+  const W = canvas.width;
+  const H = canvas.height;
+  const PADDING = 30;
+  const FRICTION = 0.78;
+  const BOUNCE = 0.72;
+  const SIZE = 44;
+  const RADIUS = SIZE * 0.55; // collision radius per die
+
+  ctx.clearRect(0, 0, W, H);
+
+  // ── 1. Integrate physics for each die ──
+  resultDice.forEach(d => {
+    if (d.settled) return;
+
+    // No gravity — apply rolling friction instead
+    d.vx *= 0.96;
+    d.vy *= 0.96;
+    d.vrot *= 0.94;
+
+    d.x  += d.vx;
+    d.y  += d.vy;
+    d.rot += d.vrot;
+
+    // Wall bounces
+    if (d.x < PADDING + RADIUS) {
+      d.x = PADDING + RADIUS;
+      d.vx = Math.abs(d.vx) * BOUNCE;
+      d.vrot *= -0.9;
+      d.bounces++;
+    }
+    if (d.x > W - PADDING - RADIUS) {
+      d.x = W - PADDING - RADIUS;
+      d.vx = -Math.abs(d.vx) * BOUNCE;
+      d.vrot *= -0.9;
+      d.bounces++;
+    }
+    if (d.y < PADDING + RADIUS) {
+      d.y = PADDING + RADIUS;
+      d.vy = Math.abs(d.vy) * BOUNCE;
+      d.vrot *= -0.9;
+      d.bounces++;
+    }
+    if (d.y > H - PADDING - RADIUS) {
+      d.y = H - PADDING - RADIUS;
+      d.vy = -Math.abs(d.vy) * BOUNCE;
+      d.vx *= FRICTION;
+      d.vrot *= -0.9;
+      d.bounces++;
+    }
+  });
+
+  // ── 2. Die-to-die collision (settled dice act as immovable obstacles) ──
+  const DIAM = RADIUS * 2;
+  for (let i = 0; i < resultDice.length; i++) {
+    for (let j = i + 1; j < resultDice.length; j++) {
+      const a = resultDice[i];
+      const b = resultDice[j];
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist >= DIAM || dist === 0) continue; // no overlap
+
+      // Normalised collision axis
+      const nx = dx / dist;
+      const ny = dy / dist;
+
+      // Positional correction — push apart so they no longer overlap
+      const overlap = DIAM - dist;
+
+      if (a.settled && b.settled) {
+        // Both settled: just nudge apart a tiny bit (shouldn't happen often)
+        b.x += nx * overlap * 0.5;
+        b.y += ny * overlap * 0.5;
+        a.x -= nx * overlap * 0.5;
+        a.y -= ny * overlap * 0.5;
+      } else if (a.settled) {
+        // a is immovable — push b away fully
+        b.x += nx * overlap;
+        b.y += ny * overlap;
+      } else if (b.settled) {
+        // b is immovable — push a away fully
+        a.x -= nx * overlap;
+        a.y -= ny * overlap;
+      } else {
+        // Both moving — split the correction
+        a.x -= nx * overlap * 0.5;
+        a.y -= ny * overlap * 0.5;
+        b.x += nx * overlap * 0.5;
+        b.y += ny * overlap * 0.5;
+      }
+
+      // Velocity exchange along collision axis (elastic-ish, only for moving dice)
+      const RESTITUTION = 0.75;
+
+      if (!a.settled && !b.settled) {
+        const relVel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+        if (relVel > 0) { // only resolve if approaching
+          const impulse = relVel * RESTITUTION;
+          a.vx -= impulse * nx;
+          a.vy -= impulse * ny;
+          b.vx += impulse * nx;
+          b.vy += impulse * ny;
+          // Impart a little spin from the glancing hit
+          a.vrot += (ny * impulse) * 0.15;
+          b.vrot -= (ny * impulse) * 0.15;
+        }
+      } else if (!a.settled && b.settled) {
+        const relVel = a.vx * nx + a.vy * ny;
+        if (relVel > 0) {
+          a.vx -= relVel * (1 + RESTITUTION) * nx;
+          a.vy -= relVel * (1 + RESTITUTION) * ny;
+          a.vrot *= -0.6;
+        }
+      } else if (a.settled && !b.settled) {
+        const relVel = b.vx * (-nx) + b.vy * (-ny);
+        if (relVel > 0) {
+          b.vx += relVel * (1 + RESTITUTION) * nx;
+          b.vy += relVel * (1 + RESTITUTION) * ny;
+          b.vrot *= -0.6;
+        }
+      }
+    }
+  }
+
+  // ── 3. Settle check & draw ──
+  let allSettled = true;
+  resultDice.forEach(d => {
+    if (!d.settled) {
+      if (Math.abs(d.vx) < 0.25 && Math.abs(d.vy) < 0.25 && Math.abs(d.vrot) < 0.015) {
+        d.settled = true;
+        d.vx = 0; d.vy = 0; d.vrot = 0;
+      } else {
+        allSettled = false;
+      }
+    }
+    drawDie(d, SIZE, false);
+  });
+
+  if (!allSettled) {
+    requestAnimationFrame(simulate);
+  } else {
+    rolling = false;
+    showTotal();
+  }
+}
+
+function resizeCanvas() {
+  const box = rollBox.getBoundingClientRect();
+  if (canvas.width !== box.width || canvas.height !== box.height) {
+    canvas.width = box.width;
+    canvas.height = box.height;
+  }
+}
+
+// ─────────────────────────────────────────
+// HIT TEST — find die under a canvas point
+// ─────────────────────────────────────────
+const HIT_SIZE = 44;
+
+function dieAtPoint(cx, cy) {
+  // Iterate in reverse so topmost-drawn die wins
+  for (let i = resultDice.length - 1; i >= 0; i--) {
+    const d = resultDice[i];
+    if (!d.settled) continue;
+    const dx = cx - d.x;
+    const dy = cy - d.y;
+    // Rotate point into die's local space
+    const cos = Math.cos(-d.rot), sin = Math.sin(-d.rot);
+    const lx = dx * cos - dy * sin;
+    const ly = dx * sin + dy * cos;
+    if (Math.abs(lx) <= HIT_SIZE / 2 + 4 && Math.abs(ly) <= HIT_SIZE / 2 + 4) return d;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousemove', e => {
+  if (rolling) return;
+  const r = canvas.getBoundingClientRect();
+  const hit = dieAtPoint(e.clientX - r.left, e.clientY - r.top);
+  canvas.style.cursor = hit ? 'pointer' : 'default';
+  // Redraw with highlight
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  resultDice.forEach(d => drawDie(d, 44, d === hit));
+});
+
+canvas.addEventListener('mouseleave', () => {
+  canvas.style.cursor = 'default';
+  if (!rolling && resultDice.length > 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    resultDice.forEach(d => drawDie(d, 44, false));
+  }
+});
+
+canvas.addEventListener('click', e => {
+  if (rolling) return;
+  const r = canvas.getBoundingClientRect();
+  const hit = dieAtPoint(e.clientX - r.left, e.clientY - r.top);
+  if (!hit) return;
+  rerollSingle(hit);
+});
+
+canvas.addEventListener('touchend', e => {
+  if (rolling) return;
+  const r = canvas.getBoundingClientRect();
+  const t = e.changedTouches[0];
+  const hit = dieAtPoint(t.clientX - r.left, t.clientY - r.top);
+  if (!hit) return;
+  e.preventDefault();
+  rerollSingle(hit);
+}, { passive: false });
+
+// ─────────────────────────────────────────
+// SINGLE-DIE REROLL
+// ─────────────────────────────────────────
+function rerollSingle(d) {
+  totalBar.classList.remove('visible');
+  d.settled = false;
+  d.value = Math.floor(Math.random() * d.def.sides) + 1;
+  const angle = Math.random() * Math.PI * 2;
+  const speed = 16 + Math.random() * 10;
+  d.vx = Math.cos(angle) * speed;
+  d.vy = Math.sin(angle) * speed;
+  d.vrot = (Math.random() - 0.5) * 0.6;
+  rolling = true;
+  requestAnimationFrame(simulate);
+}
+
+// ─────────────────────────────────────────
+// DRAW DIE ON CANVAS
+// ─────────────────────────────────────────
+function drawDie(d, size, highlight) {
+  const { def, value, x, y, rot } = d;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+
+  const s = size;
+  const half = s / 2;
+
+  // Hover highlight ring
+  if (highlight) {
+    ctx.beginPath();
+    ctx.arc(0, 0, half + 7, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(240,200,74,0.55)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  // Shadow
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+
+  ctx.fillStyle = def.color;
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  switch (def.type) {
+    case 'D4':
+      canvasTriangle(ctx, 0, -half * 0.9, half * 0.95, half * 0.7, -half * 0.95, half * 0.7);
+      break;
+    case 'D6':
+      roundRect(ctx, -half, -half, s, s, 5);
+      break;
+    case 'D8':
+      canvasDiamond(ctx, 0, -half, half, 0, 0, half, -half, 0);
+      break;
+    case 'D10':
+      canvasPentagonLike(ctx, s);
+      break;
+    case 'D12':
+      canvasPentagon(ctx, 0, 0, half - 2);
+      break;
+    case 'D20':
+      canvasHexagon(ctx, 0, 0, half - 2);
+      break;
+  }
+  ctx.shadowColor = 'transparent';
+
+  // Gradient fill
+  const grad = ctx.createRadialGradient(-half * 0.3, -half * 0.3, 0, 0, 0, s);
+  grad.addColorStop(0, lighten(def.color, 0.35));
+  grad.addColorStop(1, def.colorDark);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.stroke();
+
+  // Number — only show once settled
+  if (d.settled) {
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    const fontSize = value >= 10 ? s * 0.32 : s * 0.38;
+    ctx.font = `900 ${fontSize}px 'Cinzel', serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const textY = def.type === 'D4' ? half * 0.25 : 0;
+    // Black border
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = fontSize * 0.18;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(String(value), 0, textY);
+    // White fill
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(String(value), 0, textY);
+  }
+
+  ctx.restore();
+}
+
+function canvasTriangle(ctx, x1, y1, x2, y2, x3, y3) {
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath();
+}
+function canvasDiamond(ctx, x1, y1, x2, y2, x3, y3, x4, y4) {
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.lineTo(x4, y4); ctx.closePath();
+}
+function canvasPentagonLike(ctx, s) {
+  const h = s / 2;
+  ctx.moveTo(0, -h * 0.9);
+  ctx.lineTo(h * 0.9, -h * 0.25);
+  ctx.lineTo(h * 0.65, h * 0.8);
+  ctx.lineTo(-h * 0.65, h * 0.8);
+  ctx.lineTo(-h * 0.9, -h * 0.25);
+  ctx.closePath();
+}
+function canvasPentagon(ctx, cx, cy, r) {
+  ctx.moveTo(cx + r * Math.cos(-Math.PI / 2), cy + r * Math.sin(-Math.PI / 2));
+  for (let i = 1; i < 5; i++) {
+    const a = (Math.PI * 2 * i / 5) - Math.PI / 2;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+}
+function canvasHexagon(ctx, cx, cy, r) {
+  ctx.moveTo(cx + r * Math.cos(-Math.PI / 6), cy + r * Math.sin(-Math.PI / 6));
+  for (let i = 1; i < 6; i++) {
+    const a = (Math.PI * 2 * i / 6) - Math.PI / 6;
+    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+  }
+  ctx.closePath();
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function lighten(hex, amount) {
+  const num = parseInt(hex.replace('#',''), 16);
+  const r = Math.min(255, (num >> 16) + Math.round(255 * amount));
+  const g = Math.min(255, ((num >> 8) & 0xff) + Math.round(255 * amount));
+  const b = Math.min(255, (num & 0xff) + Math.round(255 * amount));
+  return `rgb(${r},${g},${b})`;
+}
+
+// ─────────────────────────────────────────
+// TOTAL
+// ─────────────────────────────────────────
+function showTotal() {
+  if (resultDice.length === 0) return;
+  const total = resultDice.reduce((s, d) => s + d.value, 0);
+  totalValue.textContent = total;
+
+  // Group by dice type, preserving DICE order
+  const groups = {};
+  resultDice.forEach(d => {
+    const t = d.def.type;
+    if (!groups[t]) groups[t] = { def: d.def, rolls: [] };
+    groups[t].rolls.push(d.value);
+  });
+
+  totalBreakdown.innerHTML = '';
+  // Only show breakdown if more than one die or more than one type
+  if (resultDice.length > 1) {
+    DICE.forEach(diceDef => {
+      const g = groups[diceDef.type];
+      if (!g) return;
+      const subtotal = g.rolls.reduce((a, b) => a + b, 0);
+      const chip = document.createElement('div');
+      chip.className = 'breakdown-group';
+      chip.innerHTML = `
+        <span class="breakdown-type">${g.def.type}</span>
+        <span class="breakdown-rolls">${g.rolls.join(' + ')}</span>
+        ${g.rolls.length > 1 ? `<span class="breakdown-subtotal">${subtotal}</span>` : ''}
+      `;
+      totalBreakdown.appendChild(chip);
+    });
+  }
+
+  totalBar.classList.add('visible');
+}
+
+function clearResults() {
+  resultDice = [];
+  resizeCanvas();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  totalBar.classList.remove('visible');
+  rollBoxLabel.style.opacity = '1';
+}
+
+// ─────────────────────────────────────────
+// RESIZE
+// ─────────────────────────────────────────
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  if (!rolling && resultDice.length > 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    resultDice.forEach(d => drawDie(d, 44, false));
+  }
+});
+
+resizeCanvas();
+updateCupUI();
+</script>
+</body>
+</html>
