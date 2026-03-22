@@ -32,10 +32,11 @@
       radial-gradient(ellipse at 20% 50%, rgba(100,50,0,0.2) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 50%, rgba(60,20,0,0.2) 0%, transparent 60%);
     font-family: 'Crimson Text', Georgia, serif;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     color: var(--cream);
     user-select: none;
   }
@@ -124,9 +125,9 @@
   h1 {
     font-family: 'Texturina', serif;
     font-weight: 900;
-    font-size: 4.8rem;
+    font-size: clamp(2rem, 6vw, 4.8rem);
     color: var(--gold);
-    letter-spacing: 0.15em;
+    letter-spacing: clamp(0.08em, 0.4vw, 0.15em);
     text-shadow: 0 0 20px rgba(201,168,76,0.5), 0 2px 4px rgba(0,0,0,0.8);
   }
 
@@ -135,6 +136,8 @@
     display: flex;
     gap: 18px;
     align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .die-btn {
@@ -265,8 +268,8 @@
 
   /* ── SIDEBAR (right) ── */
   .sidebar {
-    width: 380px;
-    min-width: 380px;
+    width: clamp(280px, 30vw, 380px);
+    min-width: 280px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -274,6 +277,7 @@
     gap: 10px;
     background: linear-gradient(180deg, #0c1e14 0%, #0a1810 100%);
     border-left: none;
+    overflow-y: auto;
   }
 
   .sidebar-title {
@@ -313,8 +317,9 @@
   /* dice count sits above the cup */
 
   #cup {
-    width: 360px;
-    height: 420px;
+    width: min(100%, clamp(240px, 28vw, 360px));
+    aspect-ratio: 6 / 7;
+    height: auto;
     position: relative;
     cursor: grab;
     transition: transform 0.1s;
@@ -334,11 +339,11 @@
   .cup-hint {
     font-family: 'Crimson Text', serif;
     font-style: italic;
-    font-size: 1.2rem;
+    font-size: clamp(0.95rem, 1.8vw, 1.2rem);
     color: rgba(201,168,76,0.5);
     text-align: center;
     line-height: 1.4;
-    max-width: 340px;
+    max-width: min(100%, 340px);
   }
 
   .cup-dice-list {
@@ -346,7 +351,7 @@
     flex-wrap: wrap;
     gap: 6px;
     justify-content: center;
-    max-width: 360px;
+    max-width: min(100%, 360px);
     min-height: 24px;
   }
 
@@ -541,11 +546,94 @@
   }
   .total-value {
     font-family: 'Texturina', serif;
-    font-size: 8rem;
+    font-size: clamp(3rem, 9vw, 8rem);
     font-weight: 900;
     color: var(--gold-bright);
     text-shadow: 0 0 30px rgba(240,200,74,0.5);
     line-height: 1;
+  }
+
+  @media (max-width: 1100px) {
+    body {
+      overflow-y: auto;
+    }
+
+    main {
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .roll-box {
+      min-height: 52vh;
+    }
+
+    .sidebar {
+      width: 100%;
+      min-width: 0;
+      max-height: 48vh;
+      border-top: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .cup-wrapper {
+      width: 100%;
+    }
+
+    .cup-glow {
+      width: min(70vw, 280px);
+      height: min(55vh, 420px);
+    }
+  }
+
+  @media (max-width: 760px) {
+    header {
+      padding: 8px 12px;
+    }
+
+    .volume-control {
+      position: static;
+      transform: none;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .volume-slider {
+      writing-mode: horizontal-tb;
+      direction: ltr;
+      width: 120px;
+      height: 16px;
+    }
+
+    .dice-bar {
+      gap: 10px;
+    }
+
+    .die-btn svg {
+      width: 52px;
+      height: 52px;
+    }
+
+    .die-label {
+      font-size: 0.8rem;
+    }
+
+    .roll-box {
+      min-height: 46vh;
+    }
+
+    .sidebar {
+      padding: 8px;
+    }
+
+    #cup {
+      width: min(100%, 280px);
+    }
+
+    .breakdown-group {
+      min-width: 56px;
+      padding: 6px 10px;
+    }
   }
   .total-breakdown {
     display: flex;
