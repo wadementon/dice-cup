@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -41,7 +41,7 @@
     user-select: none;
   }
 
-  /* â”€â”€ HEADER â”€â”€ */
+  /* -- HEADER -- */
   header {
     background: linear-gradient(180deg, #0a1a10 0%, var(--felt-edge) 100%);
     padding: 10px 20px;
@@ -59,7 +59,7 @@
     z-index: 12;
   }
 
-  /* â”€â”€ VOLUME CONTROL â”€â”€ */
+  /* -- VOLUME CONTROL -- */
   .volume-control {
     position: absolute;
     left: 18px;
@@ -148,7 +148,7 @@
     letter-spacing: 0;
   }
 
-  /* â”€â”€ DICE PICKER BUTTONS â”€â”€ */
+  /* -- DICE PICKER BUTTONS -- */
   .dice-bar {
     display: flex;
     gap: 18px;
@@ -186,7 +186,7 @@
     letter-spacing: 0;
   }
 
-  /* â”€â”€ MAIN AREA â”€â”€ */
+  /* -- MAIN AREA -- */
   main {
     flex: 1;
     display: flex;
@@ -198,7 +198,7 @@
     z-index: 8;
   }
 
-  /* â”€â”€ ROLL BOX (left) â”€â”€ */
+  /* -- ROLL BOX (left) -- */
   .roll-box {
     flex: 1;
     position: relative;
@@ -255,7 +255,7 @@
     animation: pulseBeat 0.6s ease-in-out infinite;
   }
 
-  /* â”€â”€ BOUNCE ANIMATION â”€â”€ */
+  /* -- BOUNCE ANIMATION -- */
   @keyframes dieBounce {
     0%   { transform: scale(1.35); }
     40%  { transform: scale(0.88); }
@@ -269,7 +269,7 @@
     animation: dieBounce 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
   }
 
-  /* â”€â”€ TOTAL BAR SCALE-UP â”€â”€ */
+  /* -- TOTAL BAR SCALE-UP -- */
   @keyframes totalReveal {
     0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
     60%  { transform: translate(-50%, -50%) scale(1.08); }
@@ -285,7 +285,7 @@
     cursor: default;
   }
 
-  /* â”€â”€ SIDEBAR (right) â”€â”€ */
+  /* -- SIDEBAR (right) -- */
   .sidebar {
     width: clamp(280px, 30vw, 380px);
     min-width: 280px;
@@ -309,7 +309,7 @@
     text-transform: uppercase;
   }
 
-  /* â”€â”€ DICE CUP â”€â”€ */
+  /* -- DICE CUP -- */
   .cup-wrapper {
     display: flex;
     flex-direction: column;
@@ -394,8 +394,14 @@
     border: 1px solid var(--gold);
   }
 
-  /* â”€â”€ EMPTY BUTTON â”€â”€ */
+  /* -- EMPTY BUTTON -- */
   .empty-btn {
+    position: absolute;
+    left: 50%;
+    top: calc(50% + 170px);
+    transform: translateX(-50%);
+    z-index: 4;
+    pointer-events: auto;
     background: none;
     border: 2px solid var(--gold-dim);
     color: var(--gold-dim);
@@ -407,12 +413,6 @@
     transition: all 0.2s;
     text-transform: uppercase;
     border-radius: 3px;
-    position: absolute;
-    left: 50%;
-    top: calc(50% + clamp(92px, 16vh, 170px));
-    transform: translateX(-50%);
-    z-index: 4;
-    white-space: nowrap;
   }
   .empty-btn:hover {
     border-color: var(--gold);
@@ -421,7 +421,7 @@
     box-shadow: 0 0 12px rgba(201,168,76,0.2);
   }
 
-  /* â”€â”€ CHARGE BAR â”€â”€ */
+  /* -- CHARGE BAR -- */
   .charge-bar-wrap {
     position: absolute;
     left: 50%;
@@ -468,7 +468,7 @@
     background: var(--gold-dim);
   }
 
-  /* â”€â”€ COLOR PICKER DROPDOWN â”€â”€ */
+  /* -- COLOR PICKER DROPDOWN -- */
   .color-picker-dropdown {
     position: fixed;
     z-index: 1000;
@@ -557,7 +557,7 @@
     line-height: 1;
   }
 
-  /* â”€â”€ TOTAL BAR â”€â”€ */
+  /* -- TOTAL BAR -- */
   .total-bar {
     position: absolute;
     top: 50%;
@@ -628,12 +628,7 @@
       aspect-ratio: 6 / 7;
       height: auto;
     }
-
-    .empty-btn {
-      top: calc(50% + clamp(82px, 13vh, 130px));
-    }
   }
-
 
   @media (max-width: 760px) {
     main {
@@ -702,15 +697,7 @@
       min-width: 56px;
       padding: 6px 10px;
     }
-
-    .empty-btn {
-      top: calc(50% + clamp(74px, 12vh, 116px));
-      font-size: 0.9rem;
-      letter-spacing: 0.12em;
-      padding: 8px 18px;
-    }
   }
-
   .total-breakdown {
     display: flex;
     flex-wrap: wrap;
@@ -760,7 +747,7 @@
     text-align: center;
   }
 
-  /* â”€â”€ BORDER IMAGE â”€â”€ */
+  /* -- BORDER IMAGE -- */
   .border-h {
     width: 100%;
     height: 22px;
@@ -780,7 +767,7 @@
   }
 
 
-  /* â”€â”€ OUTER BORDER FRAME â”€â”€ */
+  /* -- OUTER BORDER FRAME -- */
   .window-wrap {
     display: flex;
     flex-direction: row;
@@ -840,7 +827,7 @@
       <span class="total-value" id="totalValue">0</span>
       <div class="total-breakdown" id="totalBreakdown"></div>
     </div>
-    <button class="empty-btn" id="emptyBtn" type="button">Empty</button>
+    <button class="empty-btn" id="emptyBtn">Empty</button>
   </div>
 
   <div class="border-v"></div>
@@ -884,9 +871,9 @@
 </div>
 
 <script>
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // PNG DIE SKINS (luminance-alpha, white=opaque)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 const DIE_IMAGES = {};
 (function(){ const img = new Image(); img.src = "data:image/png;base64,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"; DIE_IMAGES["D4"] = img; })();
 (function(){ const img = new Image(); img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOYAAADlCAYAAABH/osVAAACsUlEQVR4nO3TMQEAIAzAMMC/5yEAAfRIFPTpnplZQMr5HQC8jAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQpAxIciYEGRMCDImBBkTgowJQcaEIGNCkDEhyJgQZEwIMiYEGROCjAlBxoQgY0KQMSHImBBkTAgyJgQZE4KMCUHGhCBjQtAFpt0FxmwsRjQAAAAASUVORK5CYII="; DIE_IMAGES["D6"] = img; })();
@@ -904,9 +891,9 @@ const DICE = [
   { type: 'D20', sides: 20, color: '#f5a54a', colorDark: '#b06018', size: 84 },
 ];
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // PNG SHAPES for picker buttons
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 function dieShape(d, size) {
   const s = size;
   // Return a canvas element rendered as a data URL
@@ -948,9 +935,9 @@ function hexagon(cx, cy, r) {
   return pts.trim();
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // COLOR PALETTE
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 const COLOR_PALETTE = [
   // Reds
   '#e74c3c','#c0392b','#e91e63','#ad1457','#ff5252',
@@ -982,9 +969,9 @@ function darken(hex, amount = 0.4) {
   return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // BUILD PICKER BAR
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 const diceBar = document.getElementById('diceBar');
 const colorPickerDropdown = document.getElementById('colorPickerDropdown');
 const colorPickerTitle = document.getElementById('colorPickerTitle');
@@ -1055,7 +1042,7 @@ function buildPickerBar() {
     btn.className = 'die-btn';
     btn._dieRef = d;
     btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
-    btn.title = `Add ${d.type} â€” hold to change color`;
+    btn.title = `Add ${d.type} � hold to change color`;
 
     let tapHandledByTouch = false;
 
@@ -1063,6 +1050,7 @@ function buildPickerBar() {
     btn.addEventListener('mousedown', e => {
       resumeAudio();
       ensureThudBuffers();
+      preloadAudioElement(document.getElementById('dice_select'));
       longPressFired = false;
       longPressTimer = setTimeout(() => {
         longPressFired = true;
@@ -1073,6 +1061,7 @@ function buildPickerBar() {
       // Prime mobile audio in a direct touch gesture.
       resumeAudio();
       ensureThudBuffers();
+      preloadAudioElement(document.getElementById('dice_select'));
       longPressFired = false;
       longPressTimer = setTimeout(() => {
         longPressFired = true;
@@ -1115,9 +1104,9 @@ const imageLoadPromises = Object.values(DIE_IMAGES).map(img =>
 );
 Promise.all(imageLoadPromises).then(buildPickerBar);
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // CUP STATE
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 let cupDice = [];   // array of dice type strings e.g. ['D6','D6','D20']
 let rolling = false;
 let resultDice = []; // { def, value, x, y, rot, vx, vy, vrot, settled }
@@ -1187,6 +1176,23 @@ function scheduleCupGlowAlign() {
   }));
 }
 
+function positionEmptyButton() {
+  const boxRect = rollBox.getBoundingClientRect();
+  const totalRect = totalBar.getBoundingClientRect();
+  const compact = window.matchMedia('(max-width: 760px)').matches;
+  const gap = compact ? 10 : 14;
+  const fallbackTop = boxRect.height * (compact ? 0.64 : 0.68);
+
+  let top = fallbackTop;
+  if (totalBar.classList.contains('visible')) {
+    top = totalRect.bottom - boxRect.top + gap;
+  }
+
+  const minTop = 12;
+  const maxTop = boxRect.height - emptyBtn.offsetHeight - 12;
+  emptyBtn.style.top = `${Math.max(minTop, Math.min(top, maxTop))}px`;
+}
+
 function updateCupUI() {
   cupDiceList.innerHTML = '';
   // Count each type
@@ -1217,9 +1223,9 @@ emptyBtn.addEventListener('click', () => {
   clearResults();
 });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // SHAKE & ROLL
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 let isHolding = false;
 let holdStart = 0;
 let chargeRaf = null;
@@ -1324,7 +1330,7 @@ function updateChargeBar() {
   const pct = charge * 100;
   chargeBarFill.style.width = pct + '%';
 
-  // Color: gold â†’ orange â†’ red as charge builds
+  // Color: gold ? orange ? red as charge builds
   if (charge < 0.4) {
     chargeBarFill.style.background = `hsl(45, 70%, 45%)`;
   } else if (charge < 0.75) {
@@ -1342,13 +1348,13 @@ function updateChargeBar() {
   else if (charge < 0.95) chargeBarLabel.textContent = 'Powerful';
   else chargeBarLabel.textContent = 'MAX';
 
-  // Charge bar label â€” pulses in size (expand/contract), grows + reddens with charge
+  // Charge bar label � pulses in size (expand/contract), grows + reddens with charge
   const pc = charge >= 0.5 ? (charge - 0.5) / 0.5 : 0;
   const cr = Math.round(201 + pc * 54);
   const cg = Math.round(168 - pc * 168);
   const cb = Math.round(76  - pc * 76);
   const baseSize = 0.95 + charge * 0.85; // base font grows with charge
-  const pulseAmp  = 0.05 + charge * 0.45; // pulse swings Â±5% at start â†’ Â±50% at max
+  const pulseAmp  = 0.05 + charge * 0.45; // pulse swings �5% at start ? �50% at max
   const pulseDur  = Math.max(0.2, 0.65 - charge * 0.45);
   chargeBarLabel.style.fontSize = `${baseSize}rem`;
   chargeBarLabel.style.color = `rgba(${cr},${cg},${cb},${0.6 + pc * 0.4})`;
@@ -1369,7 +1375,7 @@ function updateChargeBar() {
   `;
   chargeBarLabel.style.animation = `${animName} ${pulseDur}s ease-in-out infinite`;
 
-  // "Release to Roll" â€” pulses the whole time, reddens from Strong (0.5) onwards
+  // "Release to Roll" � pulses the whole time, reddens from Strong (0.5) onwards
   const r = Math.round(201 + pc * 54);
   const g = Math.round(168 - pc * 168);
   const b = Math.round(76  - pc * 76);
@@ -1379,7 +1385,7 @@ function updateChargeBar() {
   rollBoxLabel.style.textShadow = pc > 0 ? `0 0 ${Math.round(pc * 20)}px rgba(${r},${g},${b},0.8)` : 'none';
   rollBoxLabel.style.animationDuration = `${Math.max(0.25, 0.6 - charge * 0.35)}s`;
 
-  // Cup glow â€” angled beam behind cup, pulses and warms with charge
+  // Cup glow � angled beam behind cup, pulses and warms with charge
   const glowPulseDur = Math.max(0.2, 0.65 - charge * 0.45);
   const gi = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.14 + charge * 0.28})`;
   const gp = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.24 + charge * 0.50})`;
@@ -1496,8 +1502,8 @@ function roll(charge = 1) {
   const baseSpin = minSpin + (maxSpin - minSpin) * charge;
 
   // Physics modifiers that travel with each die
-  const friction  = 0.98 - charge * 0.04;  // 0.98 (gentle) â†’ 0.94 (full) â€” less friction = rolls longer
-  const bounce    = 0.60 + charge * 0.30;  // 0.60 (gentle) â†’ 0.90 (full) â€” bouncier walls
+  const friction  = 0.98 - charge * 0.04;  // 0.98 (gentle) ? 0.94 (full) � less friction = rolls longer
+  const bounce    = 0.60 + charge * 0.30;  // 0.60 (gentle) ? 0.90 (full) � bouncier walls
   const spread    = 0.5  + charge * 0.8;   // wider scatter at full charge
 
   // Create physics dice
@@ -1550,7 +1556,7 @@ function simulate() {
 
   ctx.clearRect(0, 0, W, H);
 
-  // â”€â”€ 1. Integrate physics for each die â”€â”€
+  // -- 1. Integrate physics for each die --
   resultDice.forEach(d => {
     if (d.settled) return;
 
@@ -1595,7 +1601,7 @@ function simulate() {
     }
   });
 
-  // â”€â”€ 2. Die-to-die collision (settled dice act as immovable obstacles) â”€â”€
+  // -- 2. Die-to-die collision (settled dice act as immovable obstacles) --
   for (let i = 0; i < resultDice.length; i++) {
     for (let j = i + 1; j < resultDice.length; j++) {
       const a = resultDice[i];
@@ -1611,7 +1617,7 @@ function simulate() {
       const nx = dx / dist;
       const ny = dy / dist;
 
-      // Positional correction â€” push apart so they no longer overlap
+      // Positional correction � push apart so they no longer overlap
       const overlap = DIAM - dist;
 
       if (a.settled && b.settled) {
@@ -1621,15 +1627,15 @@ function simulate() {
         a.x -= nx * overlap * 0.5;
         a.y -= ny * overlap * 0.5;
       } else if (a.settled) {
-        // a is immovable â€” push b away fully
+        // a is immovable � push b away fully
         b.x += nx * overlap;
         b.y += ny * overlap;
       } else if (b.settled) {
-        // b is immovable â€” push a away fully
+        // b is immovable � push a away fully
         a.x -= nx * overlap;
         a.y -= ny * overlap;
       } else {
-        // Both moving â€” split the correction
+        // Both moving � split the correction
         a.x -= nx * overlap * 0.5;
         a.y -= ny * overlap * 0.5;
         b.x += nx * overlap * 0.5;
@@ -1669,7 +1675,7 @@ function simulate() {
     }
   }
 
-  // â”€â”€ 3. Settle check & draw â”€â”€
+  // -- 3. Settle check & draw --
   let allSettled = true;
   resultDice.forEach(d => {
     if (!d.settled) {
@@ -1708,9 +1714,9 @@ function resizeCanvas() {
   }
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// HIT TEST â€” find die under a canvas point
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
+// HIT TEST � find die under a canvas point
+// -----------------------------------------
 const HIT_SIZE = 44; // fallback only
 
 function dieAtPoint(cx, cy) {
@@ -1766,9 +1772,9 @@ canvas.addEventListener('touchend', e => {
   rerollSingle(hit);
 }, { passive: false });
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // SINGLE-DIE REROLL
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 function playRerollThud(dieType) {
   if (isMuted) return;
   resumeAudio();
@@ -1792,9 +1798,9 @@ function rerollSingle(d) {
   requestAnimationFrame(simulate);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // DRAW DIE ON CANVAS
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 function drawDie(d, size, highlight) {
   const { def, value, x, y, rot } = d;
   ctx.save();
@@ -1836,13 +1842,13 @@ function drawDie(d, size, highlight) {
   const imgReady = img && img.complete && img.naturalWidth > 0;
 
   if (imgReady) {
-    // â”€â”€ PNG SKIN PATH â”€â”€
+    // -- PNG SKIN PATH --
     // We use an offscreen canvas so compositing doesn't bleed into the main canvas
     const oc = document.createElement('canvas');
     oc.width = s; oc.height = s;
     const ox = oc.getContext('2d');
 
-    // 1. Draw the PNG â€” its alpha channel (luminance mask) defines the die shape
+    // 1. Draw the PNG � its alpha channel (luminance mask) defines the die shape
     ox.drawImage(img, 0, 0, s, s);
 
     // 2. Paint the chosen color only where the die pixels exist (source-atop)
@@ -1865,7 +1871,7 @@ function drawDie(d, size, highlight) {
     ctx.shadowOffsetY = 0;
 
   } else {
-    // â”€â”€ FALLBACK vector path (no image yet) â”€â”€
+    // -- FALLBACK vector path (no image yet) --
     ctx.shadowColor = 'rgba(0,0,0,0.5)';
     ctx.shadowBlur = 8;
     ctx.shadowOffsetY = 3;
@@ -1891,7 +1897,7 @@ function drawDie(d, size, highlight) {
     ctx.stroke();
   }
 
-  // Number â€” only show once settled
+  // Number � only show once settled
   if (d.settled) {
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
@@ -1960,9 +1966,9 @@ function lighten(hex, amount) {
   return `rgb(${r},${g},${b})`;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // TOTAL
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 function showTotal() {
   if (resultDice.length === 0) return;
   const total = resultDice.reduce((s, d) => s + d.value, 0);
@@ -1995,6 +2001,8 @@ function showTotal() {
   }
 
   totalBar.classList.add('visible');
+  requestAnimationFrame(positionEmptyButton);
+  setTimeout(positionEmptyButton, 650);
 }
 
 function clearResults() {
@@ -2003,11 +2011,12 @@ function clearResults() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   totalBar.classList.remove('visible');
   rollBoxLabel.style.opacity = '1';
+  requestAnimationFrame(positionEmptyButton);
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // RESIZE
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 window.addEventListener('resize', () => {
   resizeCanvas();
   if (!rolling && resultDice.length > 0) {
@@ -2015,13 +2024,16 @@ window.addEventListener('resize', () => {
     resultDice.forEach(d => drawDie(d, d.drawSize, false));
   }
   scheduleCupGlowAlign();
+  positionEmptyButton();
 });
 window.addEventListener('load', scheduleCupGlowAlign);
 
 resizeCanvas();
 updateCupUI();
 scheduleCupGlowAlign();
+positionEmptyButton();
 setTimeout(scheduleCupGlowAlign, 300);
+setTimeout(positionEmptyButton, 300);
 
 // Pre-decode thud buffers as soon as page loads
 // AudioContext may be suspended until user gesture but decoding still works
@@ -2036,9 +2048,9 @@ setTimeout(() => preloadAudioElement(document.getElementById('dice_select')), 0)
 setTimeout(ensureThudBuffers, 500);
 setTimeout(ensureRattleBuffered, 0);
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 // AUDIO ENGINE
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -----------------------------------------
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let masterGain = audioCtx.createGain();
 masterGain.gain.value = 0.6;
@@ -2056,10 +2068,17 @@ const RATTLE_START_OFFSETS = {
 };
 
 function resumeAudio() {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') {
+    try {
+      const p = audioCtx.resume();
+      return p && typeof p.then === 'function' ? p : Promise.resolve();
+    } catch (_) {
+      return Promise.resolve();
+    }
+  }
+  return Promise.resolve();
 }
-
-// Wooden clatter/rattle â€” short noise burst
+// Wooden clatter/rattle � short noise burst
 function playRattle(intensity = 0.5) {
   if (isMuted) return;
   resumeAudio();
@@ -2087,7 +2106,7 @@ function playRattle(intensity = 0.5) {
   src.start();
 }
 
-// Thud sound system â€” signature per die type + variation pool
+// Thud sound system � signature per die type + variation pool
 const THUD_SIGS = {
   D4:  document.getElementById('thud_d4'),
   D6:  document.getElementById('thud_d6'),
@@ -2165,38 +2184,65 @@ function playThudBuffer(id) {
 
 function playDiceSelect(attempt = 0) {
   if (isMuted) return;
-  resumeAudio();
+  const vol = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
+  const preferElement = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-  // Prefer decoded WebAudio buffer, same path as thud playback.
-  const buf = THUD_BUFFERS['dice_select'];
-  if (buf) {
-    const src = audioCtx.createBufferSource();
-    src.buffer = buf;
-    const g = audioCtx.createGain();
-    g.gain.value = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
-    src.connect(g);
-    g.connect(masterGain);
-    src.start();
+  const playViaElement = () => {
+    // Mobile-safe path: direct media element playback from the tap gesture.
+    const el = document.getElementById('dice_select');
+    if (!el) return false;
+    try {
+      el.currentTime = 0;
+      el.volume = vol;
+      const p = el.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => {
+          if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
+        });
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const playViaWebAudio = () => {
+    // Guard for mobile timing: only use buffer when context is definitely running.
+    if (audioCtx.state !== 'running') return false;
+    const buf = THUD_BUFFERS['dice_select'];
+    if (!buf) return false;
+    try {
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const g = audioCtx.createGain();
+      g.gain.value = vol;
+      src.connect(g);
+      g.connect(masterGain);
+      src.start();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const playAfterResume = () => {
+    if (preferElement) {
+      if (playViaElement()) return;
+      if (playViaWebAudio()) return;
+    } else {
+      if (playViaWebAudio()) return;
+      if (playViaElement()) return;
+    }
+    if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
+  };
+
+  const resumePromise = resumeAudio();
+  if (resumePromise && typeof resumePromise.then === 'function') {
+    resumePromise.then(playAfterResume).catch(playAfterResume);
     return;
   }
-
-  // Mobile fallback: direct element play with short retries while media becomes ready.
-  const el = document.getElementById('dice_select');
-  if (!el) return;
-  try {
-    el.currentTime = 0;
-    el.volume = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
-    const p = el.play();
-    if (p && typeof p.catch === 'function') {
-      p.catch(() => {
-        if (attempt < 3) setTimeout(() => playDiceSelect(attempt + 1), 80);
-      });
-    }
-  } catch (_) {
-    if (attempt < 3) setTimeout(() => playDiceSelect(attempt + 1), 80);
-  }
+  playAfterResume();
 }
-
 function playThud(dieType) {
   if (isMuted) return;
   resumeAudio();
@@ -2216,10 +2262,10 @@ function playThud(dieType) {
 }
 
 
-// â”€â”€ RATTLE SYSTEM â”€â”€
-// 1 die:   rattle_1 â†’ +rattle_strong at Strong
-// 2-4 die: rattle_3 â†’ +rattle_strong at Strong
-// 5+ die:  rattle_4 â†’ swap to rattle_5 at Strong
+// -- RATTLE SYSTEM --
+// 1 die:   base rattle_1, add rattle_strong at Strong
+// 2-4 die: base rattle_3, add rattle_strong at Strong
+// 5+ die:  base rattle_4, add rattle_5 at Strong
 
 const RATTLE_1      = document.getElementById('rattle_1');
 const RATTLE_3      = document.getElementById('rattle_3');
@@ -2461,7 +2507,7 @@ function updateRattle() {
   if (isStrong && !strongRattlePlaying) {
     strongRattlePlaying = true;
     if (count >= 5) {
-      // Swap rattle_4 â†’ rattle_5
+      // Swap rattle_4 ? rattle_5
       const layerVol = Math.min(1, vol * (0.4 + charge * 0.6));
       const layerTime = base ? base.currentTime : 0;
       const layerStart = Math.max(layerTime, getRattleStartOffset(RATTLE_5));
