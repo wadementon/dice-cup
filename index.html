@@ -1207,7 +1207,7 @@ function addToCup(d) {
   cupDice.push(d.type);
   resumeAudio();
   ensureThudBuffers();
-  playThudBuffer('dice_select');
+  playDiceSelect();
   updateCupUI();
 }
 
@@ -2027,10 +2027,12 @@ setTimeout(scheduleCupGlowAlign, 300);
 // AudioContext may be suspended until user gesture but decoding still works
 window.addEventListener('DOMContentLoaded', () => {
   // Small delay to let the page settle
+  setTimeout(() => preloadAudioElement(document.getElementById('dice_select')), 0);
   setTimeout(ensureThudBuffers, 500);
   setTimeout(ensureRattleBuffered, 0);
 });
 // Also decode immediately in case DOMContentLoaded already fired
+setTimeout(() => preloadAudioElement(document.getElementById('dice_select')), 0);
 setTimeout(ensureThudBuffers, 500);
 setTimeout(ensureRattleBuffered, 0);
 
@@ -2159,6 +2161,40 @@ function playThudBuffer(id) {
   src.connect(g);
   g.connect(masterGain);
   src.start();
+}
+
+function playDiceSelect(attempt = 0) {
+  if (isMuted) return;
+  resumeAudio();
+
+  // Prefer decoded WebAudio buffer, same path as thud playback.
+  const buf = THUD_BUFFERS['dice_select'];
+  if (buf) {
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    const g = audioCtx.createGain();
+    g.gain.value = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
+    src.connect(g);
+    g.connect(masterGain);
+    src.start();
+    return;
+  }
+
+  // Mobile fallback: direct element play with short retries while media becomes ready.
+  const el = document.getElementById('dice_select');
+  if (!el) return;
+  try {
+    el.currentTime = 0;
+    el.volume = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
+    const p = el.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(() => {
+        if (attempt < 3) setTimeout(() => playDiceSelect(attempt + 1), 80);
+      });
+    }
+  } catch (_) {
+    if (attempt < 3) setTimeout(() => playDiceSelect(attempt + 1), 80);
+  }
 }
 
 function playThud(dieType) {
