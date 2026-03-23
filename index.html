@@ -1313,7 +1313,7 @@ function updateChargeBar() {
   else if (charge < 0.5) chargeBarLabel.textContent = 'Charged';
   else if (charge < 0.75) chargeBarLabel.textContent = 'Strong';
   else if (charge < 0.95) chargeBarLabel.textContent = 'Powerful';
-  else chargeBarLabel.textContent = 'âš¡ MAX âš¡';
+  else chargeBarLabel.textContent = 'MAX';
 
   // Charge bar label â€” pulses in size (expand/contract), grows + reddens with charge
   const pc = charge >= 0.5 ? (charge - 0.5) / 0.5 : 0;
@@ -2144,16 +2144,97 @@ function getVol() {
   return isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
 }
 
+function startSyntheticRattle() {
+  if (isMuted || !isHolding || rattleInterval) return;
+  rattleInterval = setInterval(() => {
+    if (!isHolding || isMuted) return;
+    playRattle(Math.max(0.2, getCharge()));
+  }, 70);
+}
+
+function prepareRattleLoop(el, volume, rate, time = 0) {
+  if (!el) return;
+  el.volume = Math.min(1, Math.max(0, volume));
+  el.playbackRate = rate;
+  try {
+    el.currentTime = time;
+  } catch (_) {
+    el.currentTime = 0;
+  }
+}
+
+function ensureLoopPlaying(el, { retries = 2, delay = 140, onSuccess = null, onFail = null } = {}) {
+  if (!el) {
+    if (typeof onFail === 'function') onFail();
+    return;
+  }
+  let settled = false;
+
+  const attempt = triesLeft => {
+    if (settled || !isHolding) return;
+    let resolvedAttempt = false;
+    let playPromise = null;
+    try {
+      playPromise = el.play();
+    } catch (_) {}
+
+    const fail = () => {
+      if (settled || resolvedAttempt || !isHolding) return;
+      resolvedAttempt = true;
+      if (triesLeft > 0) {
+        setTimeout(() => attempt(triesLeft - 1), delay);
+      } else {
+        settled = true;
+        if (typeof onFail === 'function') onFail();
+      }
+    };
+
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(fail);
+    }
+
+    setTimeout(() => {
+      if (settled || resolvedAttempt || !isHolding) return;
+      if (el.paused) fail();
+      else {
+        resolvedAttempt = true;
+        settled = true;
+        if (typeof onSuccess === 'function') onSuccess();
+      }
+    }, delay);
+  };
+
+  attempt(retries);
+}
+
+function getBaseFallback(base) {
+  if (base === RATTLE_1 || base === RATTLE_3) return RATTLE_4;
+  if (base === RATTLE_4) return RATTLE_3;
+  return null;
+}
+
 function startRattle() {
   stopRattle();
   resumeAudio();
   const base = getRattleBase();
   const vol = getVol();
-  base.volume = Math.min(1, Math.max(0.2, vol * 0.75));
-  base.currentTime = 0;
-  base.play().catch(() => {});
+  const baseVol = Math.min(1, Math.max(0.2, vol * 0.75));
+  prepareRattleLoop(base, baseVol, 1, 0);
   activeRattles = [base];
   strongRattlePlaying = false;
+
+  const fallback = getBaseFallback(base);
+  ensureLoopPlaying(base, {
+    onFail: () => {
+      if (!fallback) {
+        startSyntheticRattle();
+        return;
+      }
+      prepareRattleLoop(fallback, baseVol, 1, 0);
+      activeRattles = [fallback];
+      ensureLoopPlaying(fallback, { onFail: startSyntheticRattle });
+    }
+  });
 }
 
 function stopRattle() {
@@ -2182,18 +2263,39 @@ function updateRattle() {
     strongRattlePlaying = true;
     if (count >= 5) {
       // Swap rattle_4 â†’ rattle_5
-      RATTLE_5.volume = Math.min(1, vol * (0.4 + charge * 0.6));
-      RATTLE_5.playbackRate = rate;
-      RATTLE_5.currentTime = activeRattles[0].currentTime;
-      RATTLE_5.play().catch(() => {});
-      activeRattles.push(RATTLE_5);
+      const layerVol = Math.min(1, vol * (0.4 + charge * 0.6));
+      const layerTime = activeRattles[0].currentTime;
+      prepareRattleLoop(RATTLE_5, layerVol, rate, layerTime);
+      ensureLoopPlaying(RATTLE_5, {
+        onSuccess: () => {
+          if (isHolding && !activeRattles.includes(RATTLE_5)) activeRattles.push(RATTLE_5);
+        },
+        onFail: () => {
+          prepareRattleLoop(RATTLE_STRONG, layerVol, rate, layerTime);
+          ensureLoopPlaying(RATTLE_STRONG, {
+            onSuccess: () => {
+              if (isHolding && !activeRattles.includes(RATTLE_STRONG)) activeRattles.push(RATTLE_STRONG);
+            }
+          });
+        }
+      });
     } else {
       // Layer in rattle_strong alongside base
-      RATTLE_STRONG.volume = Math.min(1, vol * 0.6);
-      RATTLE_STRONG.playbackRate = rate;
-      RATTLE_STRONG.currentTime = 0;
-      RATTLE_STRONG.play().catch(() => {});
-      activeRattles.push(RATTLE_STRONG);
+      const layerVol = Math.min(1, vol * 0.6);
+      prepareRattleLoop(RATTLE_STRONG, layerVol, rate, 0);
+      ensureLoopPlaying(RATTLE_STRONG, {
+        onSuccess: () => {
+          if (isHolding && !activeRattles.includes(RATTLE_STRONG)) activeRattles.push(RATTLE_STRONG);
+        },
+        onFail: () => {
+          prepareRattleLoop(RATTLE_4, layerVol, rate, 0);
+          ensureLoopPlaying(RATTLE_4, {
+            onSuccess: () => {
+              if (isHolding && !activeRattles.includes(RATTLE_4)) activeRattles.push(RATTLE_4);
+            }
+          });
+        }
+      });
     }
   }
 
