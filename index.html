@@ -2213,12 +2213,11 @@ function updateRattle() {
     strongRattlePlaying = true;
     if (count >= 5) {
       // Swap rattle_4 â†’ rattle_5
-      activeRattles[0].pause();
-      RATTLE_5.volume = Math.min(1, baseVol);
+      RATTLE_5.volume = Math.min(1, vol * (0.4 + charge * 0.6));
       RATTLE_5.playbackRate = rate;
       RATTLE_5.currentTime = activeRattles[0].currentTime;
       RATTLE_5.play().catch(() => {});
-      activeRattles = [RATTLE_5];
+      activeRattles.push(RATTLE_5);
     } else {
       // Layer in rattle_strong alongside base
       RATTLE_STRONG.volume = Math.min(1, vol * 0.6);
