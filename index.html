@@ -1057,8 +1057,12 @@ function buildPickerBar() {
     btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
     btn.title = `Add ${d.type} â€” hold to change color`;
 
+    let tapHandledByTouch = false;
+
     // Long press detection
     btn.addEventListener('mousedown', e => {
+      resumeAudio();
+      ensureThudBuffers();
       longPressFired = false;
       longPressTimer = setTimeout(() => {
         longPressFired = true;
@@ -1066,6 +1070,9 @@ function buildPickerBar() {
       }, 500);
     });
     btn.addEventListener('touchstart', e => {
+      // Prime mobile audio in a direct touch gesture.
+      resumeAudio();
+      ensureThudBuffers();
       longPressFired = false;
       longPressTimer = setTimeout(() => {
         longPressFired = true;
@@ -1076,10 +1083,24 @@ function buildPickerBar() {
     const cancelLong = () => clearTimeout(longPressTimer);
     btn.addEventListener('mouseup', cancelLong);
     btn.addEventListener('mouseleave', cancelLong);
-    btn.addEventListener('touchend', cancelLong);
+    btn.addEventListener('touchmove', cancelLong, { passive: true });
     btn.addEventListener('touchcancel', cancelLong);
 
+    btn.addEventListener('touchend', e => {
+      cancelLong();
+      if (longPressFired) {
+        longPressFired = false;
+        return;
+      }
+      // Handle tap directly on touch devices so audio runs inside touch gesture.
+      tapHandledByTouch = true;
+      e.preventDefault();
+      addToCup(d);
+      setTimeout(() => { tapHandledByTouch = false; }, 350);
+    }, { passive: false });
+
     btn.addEventListener('click', e => {
+      if (tapHandledByTouch) return;
       if (longPressFired) { longPressFired = false; return; }
       addToCup(d);
     });
