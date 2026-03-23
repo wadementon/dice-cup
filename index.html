@@ -51,7 +51,12 @@
     gap: 10px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     position: relative;
-    z-index: 10;
+    overflow: visible;
+  }
+
+  header > * {
+    position: relative;
+    z-index: 12;
   }
 
   /* â”€â”€ VOLUME CONTROL â”€â”€ */
@@ -186,9 +191,11 @@
     flex: 1;
     display: flex;
     gap: 0;
-    overflow: hidden;
+    overflow: visible;
     padding: 0;
     min-height: 0;
+    position: relative;
+    z-index: 8;
   }
 
   /* â”€â”€ ROLL BOX (left) â”€â”€ */
@@ -289,7 +296,7 @@
     gap: 10px;
     background: linear-gradient(180deg, #0c1e14 0%, #0a1810 100%);
     border-left: none;
-    overflow-y: auto;
+    overflow: visible;
   }
 
   .sidebar-title {
@@ -309,21 +316,27 @@
     gap: 6px;
     flex: 1;
     position: relative;
+    overflow: visible;
+    z-index: 5;
   }
 
   /* glow beam behind the cup */
   .cup-glow {
     position: absolute;
-    bottom: 30%;
+    top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 280px;
-    height: 500px;
-    background: radial-gradient(ellipse at 50% 90%, rgba(240,200,74,0.0) 0%, rgba(240,200,74,0.0) 100%);
-    clip-path: polygon(35% 100%, 65% 100%, 90% 0%, 10% 0%);
+    width: min(100%, clamp(240px, 28vw, 360px));
+    aspect-ratio: 6 / 7;
+    height: auto;
+    background:
+      linear-gradient(to top, rgba(255,205,90,0.26) 0%, rgba(255,205,90,0.12) 46%, rgba(255,205,90,0.0) 100%),
+      radial-gradient(ellipse at 50% 100%, rgba(255,210,90,0.34) 0%, rgba(255,210,90,0.0) 64%);
+    clip-path: polygon(38% 100%, 62% 100%, 88% 0%, 12% 0%);
     pointer-events: none;
-    z-index: 0;
-    transition: opacity 0.3s;
+    z-index: 6;
+    opacity: 0;
+    transition: opacity 0.3s, top 0.2s, height 0.2s, width 0.2s;
   }
 
   /* dice count sits above the cup */
@@ -335,10 +348,11 @@
     position: relative;
     cursor: grab;
     transition: transform 0.1s;
-    z-index: 1;
+    z-index: 7;
   }
   #cup.shaking { cursor: grabbing; animation: shake 0.12s infinite; }
   #cup svg { width: 100%; height: 100%; }
+  #cup img { width: 100%; height: 100%; display: block; }
 
   @keyframes shake {
     0%   { transform: rotate(-6deg) translateX(-3px); }
@@ -365,7 +379,7 @@
     justify-content: center;
     max-width: min(100%, 360px);
     min-height: 24px;
-    margin-top: -18px;
+    margin-top: -46px;
   }
 
   .cup-die-chip {
@@ -579,7 +593,7 @@
 
     main {
       flex-direction: column;
-      overflow: auto;
+      overflow: visible;
     }
 
     .roll-box {
@@ -591,6 +605,7 @@
       min-width: 0;
       max-height: 48vh;
       border-top: 1px solid rgba(201,168,76,0.15);
+      overflow: visible;
     }
 
     .cup-wrapper {
@@ -598,8 +613,9 @@
     }
 
     .cup-glow {
-      width: min(70vw, 280px);
-      height: min(55vh, 420px);
+      width: min(100%, clamp(240px, 28vw, 360px));
+      aspect-ratio: 6 / 7;
+      height: auto;
     }
 
     .empty-btn {
@@ -609,6 +625,10 @@
 
 
   @media (max-width: 760px) {
+    main {
+      overflow: auto;
+    }
+
     header {
       padding: 8px 12px;
     }
@@ -657,6 +677,7 @@
 
     .sidebar {
       padding: 8px;
+      overflow-y: auto;
     }
 
     #cup {
@@ -1080,6 +1101,38 @@ const totalBreakdown = document.getElementById('totalBreakdown');
 const canvas = document.getElementById('diceCanvas');
 const ctx = canvas.getContext('2d');
 
+function alignCupGlow() {
+  if (!cup || !cupGlow) return;
+  const cupWrap = cup.parentElement;
+  if (!cupWrap) return;
+  const cupRect = cup.getBoundingClientRect();
+  const wrapRect = cupWrap.getBoundingClientRect();
+  if (cupRect.width <= 0 || cupRect.height <= 0) return;
+  const visibleTop = cupRect.top + cupRect.height * cupOpaqueTopNorm;
+  const visibleBottom = cupRect.top + cupRect.height * cupOpaqueBottomNorm;
+  const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+  const desktop = window.matchMedia('(min-width: 761px)').matches;
+  const glowHeight = cupRect.height * (desktop ? 1.55 : 1.35);
+  const targetBottom = visibleTop + visibleHeight * 0.5 - (desktop ? 2 : 1);
+  const top = targetBottom - glowHeight - wrapRect.top;
+  const minTop = -(desktop ? 360 : 72);
+  const finalTop = Math.max(top, minTop);
+  const finalHeight = top < minTop
+    ? Math.max(0, targetBottom - (wrapRect.top + finalTop))
+    : glowHeight;
+  const centerX = cupRect.left - wrapRect.left + cupRect.width / 2;
+  const glowWidth = cupRect.width * 1.15;
+  cupGlow.style.left = `${centerX}px`;
+  cupGlow.style.top = `${finalTop}px`;
+  cupGlow.style.bottom = 'auto';
+  cupGlow.style.width = `${glowWidth}px`;
+  cupGlow.style.height = `${finalHeight}px`;
+}
+
+function scheduleCupGlowAlign() {
+  requestAnimationFrame(() => requestAnimationFrame(alignCupGlow));
+}
+
 function updateCupUI() {
   cupDiceList.innerHTML = '';
   // Count each type
@@ -1092,6 +1145,7 @@ function updateCupUI() {
     cupDiceList.appendChild(chip);
   });
   cupHint.style.opacity = cupDice.length === 0 ? '1' : '0.5';
+  scheduleCupGlowAlign();
 }
 
 function addToCup(d) {
@@ -1121,6 +1175,8 @@ const chargeBarLabel = document.getElementById('chargeBarLabel');
 let cupMaskData = null;
 let cupMaskWidth = 0;
 let cupMaskHeight = 0;
+let cupOpaqueTopNorm = 0;
+let cupOpaqueBottomNorm = 1;
 
 function buildCupMask() {
   if (!cupImage || !cupImage.naturalWidth || !cupImage.naturalHeight) return;
@@ -1132,6 +1188,27 @@ function buildCupMask() {
   cupMaskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data;
   cupMaskWidth = maskCanvas.width;
   cupMaskHeight = maskCanvas.height;
+
+  // Use opaque image bounds for glow placement so transparent PNG padding
+  // does not push the glow too low on some viewports.
+  let minY = cupMaskHeight;
+  let maxY = -1;
+  for (let y = 0; y < cupMaskHeight; y++) {
+    for (let x = 0; x < cupMaskWidth; x++) {
+      const alpha = cupMaskData[(y * cupMaskWidth + x) * 4 + 3];
+      if (alpha > 20) {
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxY >= minY) {
+    cupOpaqueTopNorm = minY / cupMaskHeight;
+    cupOpaqueBottomNorm = (maxY + 1) / cupMaskHeight;
+  } else {
+    cupOpaqueTopNorm = 0;
+    cupOpaqueBottomNorm = 1;
+  }
 }
 
 function isInsideCupGraphic(clientX, clientY) {
@@ -1154,8 +1231,12 @@ function isInsideCupGraphic(clientX, clientY) {
 if (cupImage) {
   if (cupImage.complete) {
     buildCupMask();
+    scheduleCupGlowAlign();
   } else {
-    cupImage.addEventListener('load', buildCupMask, { once: true });
+    cupImage.addEventListener('load', () => {
+      buildCupMask();
+      scheduleCupGlowAlign();
+    }, { once: true });
   }
 }
 
@@ -1241,8 +1322,10 @@ function updateChargeBar() {
 
   // Cup glow â€” angled beam behind cup, pulses and warms with charge
   const glowPulseDur = Math.max(0.2, 0.65 - charge * 0.45);
-  const gi = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.06 + charge * 0.25})`;
-  const gp = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.14 + charge * 0.52})`;
+  const gi = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.14 + charge * 0.28})`;
+  const gp = `rgba(255,${Math.round(200 - pc * 100)},${Math.round(74 - pc * 60)},${0.24 + charge * 0.50})`;
+  const li = `rgba(255,${Math.round(205 - pc * 95)},${Math.round(90 - pc * 58)},${0.12 + charge * 0.22})`;
+  const lp = `rgba(255,${Math.round(205 - pc * 95)},${Math.round(90 - pc * 58)},${0.22 + charge * 0.40})`;
   const go = `rgba(255,180,50,0.0)`;
   let glowStyleEl = document.getElementById('cupGlowStyle');
   if (!glowStyleEl) {
@@ -1251,10 +1334,19 @@ function updateChargeBar() {
     document.head.appendChild(glowStyleEl);
   }
   glowStyleEl.textContent = `@keyframes cupGlowPulse {
-    0%,100%{ background: radial-gradient(ellipse at 50% 85%, ${gi} 0%, ${go} 70%); }
-    50%    { background: radial-gradient(ellipse at 50% 85%, ${gp} 0%, ${go} 70%); }
+    0%,100%{
+      background:
+        linear-gradient(to top, ${li} 0%, rgba(255,190,70,0.08) 46%, ${go} 100%),
+        radial-gradient(ellipse at 50% 100%, ${gi} 0%, ${go} 64%);
+    }
+    50%{
+      background:
+        linear-gradient(to top, ${lp} 0%, rgba(255,190,70,0.14) 46%, ${go} 100%),
+        radial-gradient(ellipse at 50% 100%, ${gp} 0%, ${go} 64%);
+    }
   }`;
   cupGlow.style.animation = `cupGlowPulse ${glowPulseDur}s ease-in-out infinite`;
+  cupGlow.style.opacity = `${0.55 + charge * 0.35}`;
 
   // Update rattle with charge
   if (isHolding) updateRattle();
@@ -1301,6 +1393,7 @@ function endHold() {
   chargeBarLabel.style.animation = '';
   cupGlow.style.animation = '';
   cupGlow.style.background = '';
+  cupGlow.style.opacity = '';
   const held = Date.now() - holdStart;
   if (held > 50 && cupDice.length > 0) {
     // Play thuds shortly after release, staggered per die, passing type
@@ -1849,10 +1942,14 @@ window.addEventListener('resize', () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     resultDice.forEach(d => drawDie(d, d.drawSize, false));
   }
+  scheduleCupGlowAlign();
 });
+window.addEventListener('load', scheduleCupGlowAlign);
 
 resizeCanvas();
 updateCupUI();
+scheduleCupGlowAlign();
+setTimeout(scheduleCupGlowAlign, 300);
 
 // Pre-decode thud buffers as soon as page loads
 // AudioContext may be suspended until user gesture but decoding still works
