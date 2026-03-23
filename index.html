@@ -673,11 +673,14 @@
 
     .roll-box {
       min-height: 46vh;
+      z-index: 2;
     }
 
     .sidebar {
       padding: 8px;
       overflow: visible;
+      position: relative;
+      z-index: 20;
     }
 
     #cup {
@@ -1115,7 +1118,7 @@ function alignCupGlow() {
   const glowHeight = cupRect.height * (desktop ? 1.55 : 1.35);
   const targetBottom = visibleTop + visibleHeight * 0.5 - (desktop ? 2 : 1);
   const top = targetBottom - glowHeight - wrapRect.top;
-  const minTop = -(desktop ? 360 : 180);
+  const minTop = -(desktop ? 360 : 520);
   const finalTop = Math.max(top, minTop);
   const finalHeight = top < minTop
     ? Math.max(0, targetBottom - (wrapRect.top + finalTop))
