@@ -2197,12 +2197,7 @@ function playDiceSelect(attempt = 0) {
       const p = el.play();
       if (p && typeof p.catch === 'function') {
         p.catch(() => {
-          if (attempt < 3) {
-            setTimeout(() => playDiceSelect(attempt + 1), 100);
-          } else {
-            // Guaranteed audible fallback if dice_select media fails.
-            playThudBuffer('thud_var1');
-          }
+          if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
         });
       }
       return true;
@@ -2211,10 +2206,9 @@ function playDiceSelect(attempt = 0) {
     }
   };
 
-  // Always try direct element playback first in the user gesture path.
+  // Keep this action mapped to dice_select only.
   if (playViaElement()) return;
 
-  // Fallback: decoded WebAudio buffer if available and context is running.
   const buf = THUD_BUFFERS['dice_select'];
   if (buf && audioCtx.state === 'running') {
     try {
@@ -2229,8 +2223,7 @@ function playDiceSelect(attempt = 0) {
     } catch (_) {}
   }
 
-  // Final fallback: use an existing thud sound so add feedback is never silent.
-  playThudBuffer('thud_var1');
+  if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
 }
 function playThud(dieType) {
   if (isMuted) return;
