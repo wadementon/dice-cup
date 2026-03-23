@@ -2187,8 +2187,10 @@ function playDiceSelect(attempt = 0) {
   const vol = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
   const preferElement = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
+  // Resume context, but do not await; keep play() in the direct user gesture call stack.
+  resumeAudio();
+
   const playViaElement = () => {
-    // Mobile-safe path: direct media element playback from the tap gesture.
     const el = document.getElementById('dice_select');
     if (!el) return false;
     try {
@@ -2207,7 +2209,6 @@ function playDiceSelect(attempt = 0) {
   };
 
   const playViaWebAudio = () => {
-    // Guard for mobile timing: only use buffer when context is definitely running.
     if (audioCtx.state !== 'running') return false;
     const buf = THUD_BUFFERS['dice_select'];
     if (!buf) return false;
@@ -2225,23 +2226,15 @@ function playDiceSelect(attempt = 0) {
     }
   };
 
-  const playAfterResume = () => {
-    if (preferElement) {
-      if (playViaElement()) return;
-      if (playViaWebAudio()) return;
-    } else {
-      if (playViaWebAudio()) return;
-      if (playViaElement()) return;
-    }
-    if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
-  };
-
-  const resumePromise = resumeAudio();
-  if (resumePromise && typeof resumePromise.then === 'function') {
-    resumePromise.then(playAfterResume).catch(playAfterResume);
-    return;
+  if (preferElement) {
+    if (playViaElement()) return;
+    if (playViaWebAudio()) return;
+  } else {
+    if (playViaWebAudio()) return;
+    if (playViaElement()) return;
   }
-  playAfterResume();
+
+  if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
 }
 function playThud(dieType) {
   if (isMuted) return;
