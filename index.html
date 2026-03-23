@@ -626,7 +626,7 @@
 
   @media (max-width: 760px) {
     main {
-      overflow: auto;
+      overflow: visible;
     }
 
     header {
@@ -677,7 +677,7 @@
 
     .sidebar {
       padding: 8px;
-      overflow-y: auto;
+      overflow: visible;
     }
 
     #cup {
@@ -1115,7 +1115,7 @@ function alignCupGlow() {
   const glowHeight = cupRect.height * (desktop ? 1.55 : 1.35);
   const targetBottom = visibleTop + visibleHeight * 0.5 - (desktop ? 2 : 1);
   const top = targetBottom - glowHeight - wrapRect.top;
-  const minTop = -(desktop ? 360 : 72);
+  const minTop = -(desktop ? 360 : 180);
   const finalTop = Math.max(top, minTop);
   const finalHeight = top < minTop
     ? Math.max(0, targetBottom - (wrapRect.top + finalTop))
