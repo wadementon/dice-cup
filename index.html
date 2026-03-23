@@ -1213,7 +1213,7 @@ function addToCup(d) {
   cupDice.push(d.type);
   resumeAudio();
   ensureThudBuffers();
-  playDiceSelect();
+  playThudBuffer('dice_select');
   updateCupUI();
 }
 
@@ -2183,48 +2183,10 @@ function playThudBuffer(id) {
 }
 
 function playDiceSelect(attempt = 0) {
-  if (isMuted) return;
-  resumeAudio();
-
-  const vol = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
-  const el = document.getElementById('dice_select');
-
-  const playViaElement = () => {
-    if (!el) return false;
-    try {
-      el.currentTime = 0;
-      el.volume = vol;
-      const p = el.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => {
-          if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
-        });
-      }
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  // Keep this action mapped to dice_select only.
-  if (playViaElement()) return;
-
-  const buf = THUD_BUFFERS['dice_select'];
-  if (buf && audioCtx.state === 'running') {
-    try {
-      const src = audioCtx.createBufferSource();
-      src.buffer = buf;
-      const g = audioCtx.createGain();
-      g.gain.value = vol;
-      src.connect(g);
-      g.connect(masterGain);
-      src.start();
-      return;
-    } catch (_) {}
-  }
-
-  if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
+  // Keep selection sound on the same playback path as thuds.
+  playThudBuffer('dice_select');
 }
+
 function playThud(dieType) {
   if (isMuted) return;
   resumeAudio();
