@@ -1086,7 +1086,7 @@ function updateCupUI() {
   Object.entries(counts).forEach(([type, n]) => {
     const chip = document.createElement('div');
     chip.className = 'cup-die-chip';
-    chip.textContent = n > 1 ? `${n}Ãƒâ€”${type}` : type;
+    chip.textContent = n > 1 ? `${n}${String.fromCharCode(215)}${type}` : type;
     cupDiceList.appendChild(chip);
   });
   cupHint.style.opacity = cupDice.length === 0 ? '1' : '0.5';
