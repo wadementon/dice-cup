@@ -2184,14 +2184,12 @@ function playThudBuffer(id) {
 
 function playDiceSelect(attempt = 0) {
   if (isMuted) return;
-  const vol = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
-  const preferElement = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-
-  // Resume context, but do not await; keep play() in the direct user gesture call stack.
   resumeAudio();
 
+  const vol = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
+  const el = document.getElementById('dice_select');
+
   const playViaElement = () => {
-    const el = document.getElementById('dice_select');
     if (!el) return false;
     try {
       el.currentTime = 0;
@@ -2199,7 +2197,12 @@ function playDiceSelect(attempt = 0) {
       const p = el.play();
       if (p && typeof p.catch === 'function') {
         p.catch(() => {
-          if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
+          if (attempt < 3) {
+            setTimeout(() => playDiceSelect(attempt + 1), 100);
+          } else {
+            // Guaranteed audible fallback if dice_select media fails.
+            playThudBuffer('thud_var1');
+          }
         });
       }
       return true;
@@ -2208,10 +2211,12 @@ function playDiceSelect(attempt = 0) {
     }
   };
 
-  const playViaWebAudio = () => {
-    if (audioCtx.state !== 'running') return false;
-    const buf = THUD_BUFFERS['dice_select'];
-    if (!buf) return false;
+  // Always try direct element playback first in the user gesture path.
+  if (playViaElement()) return;
+
+  // Fallback: decoded WebAudio buffer if available and context is running.
+  const buf = THUD_BUFFERS['dice_select'];
+  if (buf && audioCtx.state === 'running') {
     try {
       const src = audioCtx.createBufferSource();
       src.buffer = buf;
@@ -2220,21 +2225,12 @@ function playDiceSelect(attempt = 0) {
       src.connect(g);
       g.connect(masterGain);
       src.start();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  };
-
-  if (preferElement) {
-    if (playViaElement()) return;
-    if (playViaWebAudio()) return;
-  } else {
-    if (playViaWebAudio()) return;
-    if (playViaElement()) return;
+      return;
+    } catch (_) {}
   }
 
-  if (attempt < 4) setTimeout(() => playDiceSelect(attempt + 1), 100);
+  // Final fallback: use an existing thud sound so add feedback is never silent.
+  playThudBuffer('thud_var1');
 }
 function playThud(dieType) {
   if (isMuted) return;
