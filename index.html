@@ -1394,6 +1394,7 @@ function startHold() {
   cup.classList.add('shaking');
   chargeBarWrap.classList.add('visible');
   resumeAudio();
+  primeRattleAudio();
   if (cupDice.length > 0) startRattle();
   chargeBarFill.style.width = '0%';
   chargeBarLabel.textContent = 'Gentle';
@@ -2129,9 +2130,11 @@ const RATTLE_3      = document.getElementById('rattle_3');
 const RATTLE_4      = document.getElementById('rattle_4');
 const RATTLE_5      = document.getElementById('rattle_5');
 const RATTLE_STRONG = document.getElementById('rattle_strong');
+const RATTLE_AUDIO  = [RATTLE_1, RATTLE_3, RATTLE_4, RATTLE_5, RATTLE_STRONG];
 
 let activeRattles = []; // currently playing rattle elements
 let strongRattlePlaying = false;
+let rattleAudioPrimed = false;
 
 function getRattleBase() {
   const count = cupDice.length;
@@ -2144,11 +2147,40 @@ function getVol() {
   return isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
 }
 
+function primeRattleAudio() {
+  if (rattleAudioPrimed) return;
+  resumeAudio();
+  RATTLE_AUDIO.forEach(r => {
+    if (!r) return;
+    const prevMuted = r.muted;
+    const prevVol = r.volume;
+    r.muted = true;
+    r.volume = 0;
+    r.currentTime = 0;
+    const done = () => {
+      r.pause();
+      r.currentTime = 0;
+      r.muted = prevMuted;
+      r.volume = prevVol;
+    };
+    try {
+      const p = r.play();
+      if (p && typeof p.then === 'function') p.then(done).catch(done);
+      else done();
+    } catch (_) {
+      done();
+    }
+  });
+  rattleAudioPrimed = true;
+}
+
 function startRattle() {
   stopRattle();
   resumeAudio();
+  primeRattleAudio();
   const base = getRattleBase();
-  base.volume = getVol() * 0.5; // start quieter, ramp up
+  const vol = getVol();
+  base.volume = Math.min(1, Math.max(0.2, vol * 0.75));
   base.currentTime = 0;
   base.play().catch(() => {});
   activeRattles = [base];
@@ -2169,7 +2201,7 @@ function updateRattle() {
   const count = cupDice.length;
 
   // Ramp base volume and speed with charge
-  const baseVol = vol * (0.5 + charge * 0.5);
+  const baseVol = Math.min(1, Math.max(0.2, vol * (0.7 + charge * 0.45)));
   const rate = 0.85 + charge * 0.4;
   activeRattles[0].volume = Math.min(1, baseVol);
   activeRattles[0].playbackRate = rate;
