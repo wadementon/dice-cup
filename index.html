@@ -1199,6 +1199,8 @@ let isHolding = false;
 let holdStart = 0;
 let chargeRaf = null;
 const CHARGE_MAX_MS = 3000; // 3 seconds = full charge
+let shakeStartTimer = null;
+const SHAKE_CLASS_DELAY_MS = 120;
 
 const chargeBarWrap = document.getElementById('chargeBarWrap');
 const chargeBarFill = document.getElementById('chargeBarFill');
@@ -1390,11 +1392,18 @@ function startHold() {
   if (cupDice.length === 0) return;
   isHolding = true;
   holdStart = Date.now();
-  scheduleCupGlowAlign();
-  cup.classList.add('shaking');
-  chargeBarWrap.classList.add('visible');
   resumeAudio();
   if (cupDice.length > 0) startRattle();
+  if (shakeStartTimer) {
+    clearTimeout(shakeStartTimer);
+    shakeStartTimer = null;
+  }
+  cup.classList.remove('shaking');
+  shakeStartTimer = setTimeout(() => {
+    if (isHolding) cup.classList.add('shaking');
+  }, SHAKE_CLASS_DELAY_MS);
+  scheduleCupGlowAlign();
+  chargeBarWrap.classList.add('visible');
   chargeBarFill.style.width = '0%';
   chargeBarLabel.textContent = 'Gentle';
   rollBoxLabel.classList.add('pulsing');
@@ -1405,6 +1414,10 @@ function startHold() {
 function endHold() {
   if (!isHolding) return;
   isHolding = false;
+  if (shakeStartTimer) {
+    clearTimeout(shakeStartTimer);
+    shakeStartTimer = null;
+  }
   cup.classList.remove('shaking');
   stopRattle();
   cancelAnimationFrame(chargeRaf);
@@ -2003,17 +2016,14 @@ masterGain.connect(audioCtx.destination);
 
 let isMuted = false;
 let rattleInterval = null;
-let baseStartWatch = null;
-const BASE_RATTLE_START_OFFSET = 0.22;
+const BASE_RATTLE_START_OFFSET = 0.02;
 const RATTLE_START_OFFSETS = {
-  rattle_1: 1.6,
-  rattle_3: 1.35,
-  rattle_4: 0.22,
-  rattle_5: 1.35,
-  rattle_strong: 0.08
+  rattle_1: 0.02,
+  rattle_3: 0.02,
+  rattle_4: 0.02,
+  rattle_5: 0.02,
+  rattle_strong: 0.02
 };
-const computedRattleStartOffsets = Object.create(null);
-let rattleOffsetsWarmStarted = false;
 
 function resumeAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -2155,47 +2165,8 @@ function getVol() {
   return isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
 }
 
-async function detectRattleStartOffset(el) {
-  if (!el || !el.src || !el.id) return;
-  try {
-    const resp = await fetch(el.src);
-    const arr = await resp.arrayBuffer();
-    const buf = await audioCtx.decodeAudioData(arr.slice(0));
-    if (!buf || !buf.length) return;
-    const ch = buf.getChannelData(0);
-    const win = 1024;
-    const step = 256;
-    const threshold = 0.012;
-    let idx = 0;
-    let found = false;
-    for (let i = 0; i < ch.length - win; i += step) {
-      let sum = 0;
-      for (let j = 0; j < win; j++) sum += Math.abs(ch[i + j]);
-      const avg = sum / win;
-      if (avg > threshold) {
-        idx = i;
-        found = true;
-        break;
-      }
-    }
-    let offset = found ? Math.max(0, idx / buf.sampleRate - 0.03) : 0;
-    const maxStart = Math.max(0, buf.duration - 0.2);
-    computedRattleStartOffsets[el.id] = Math.min(offset, maxStart);
-  } catch (_) {}
-}
-
-function warmRattleStartOffsets() {
-  if (rattleOffsetsWarmStarted) return;
-  rattleOffsetsWarmStarted = true;
-  const els = [RATTLE_1, RATTLE_3, RATTLE_4, RATTLE_5, RATTLE_STRONG].filter(Boolean);
-  Promise.all(els.map(detectRattleStartOffset)).catch(() => {});
-}
-
 function getRattleStartOffset(el) {
   if (!el || !el.id) return BASE_RATTLE_START_OFFSET;
-  if (Object.prototype.hasOwnProperty.call(computedRattleStartOffsets, el.id)) {
-    return computedRattleStartOffsets[el.id];
-  }
   return Object.prototype.hasOwnProperty.call(RATTLE_START_OFFSETS, el.id)
     ? RATTLE_START_OFFSETS[el.id]
     : BASE_RATTLE_START_OFFSET;
@@ -2273,49 +2244,29 @@ function getBaseFallback(base) {
 function startRattle() {
   stopRattle();
   resumeAudio();
-  warmRattleStartOffsets();
   const base = getRattleBase();
+  if (!base) return;
   const vol = getVol();
   const baseVol = Math.min(1, Math.max(0.65, vol * 1.1));
   const startOffset = getRattleStartOffset(base);
   prepareRattleLoop(base, baseVol, 1, startOffset);
-  base.play().catch(() => {});
+  const playBase = () => base.play().catch(() => {});
+  playBase();
+  setTimeout(() => {
+    if (!isHolding) return;
+    if (base.paused || base.currentTime < startOffset + 0.04) {
+      prepareRattleLoop(base, baseVol, 1, startOffset);
+      playBase();
+    }
+  }, 120);
   activeRattles = [base];
   strongRattlePlaying = false;
-  if (baseStartWatch) {
-    clearInterval(baseStartWatch);
-    baseStartWatch = null;
-  }
-  let tries = 0;
-  baseStartWatch = setInterval(() => {
-    if (!isHolding) {
-      clearInterval(baseStartWatch);
-      baseStartWatch = null;
-      return;
-    }
-    const currentBase = activeRattles[0];
-    if (!currentBase) return;
-    const activeOffset = getRattleStartOffset(currentBase);
-    if (!currentBase.paused && currentBase.currentTime > activeOffset + 0.15) {
-      clearInterval(baseStartWatch);
-      baseStartWatch = null;
-      return;
-    }
-    if ((tries === 1 || tries === 3) && currentBase.currentTime < activeOffset) {
-      try { currentBase.currentTime = activeOffset; } catch (_) {}
-    }
-    currentBase.play().catch(() => {});
-    tries++;
-  }, 120);
 }
-
-setTimeout(warmRattleStartOffsets, 0);
 
 function stopRattle() {
   activeRattles.forEach(r => { r.pause(); r.currentTime = 0; });
   activeRattles = [];
   strongRattlePlaying = false;
-  if (baseStartWatch) { clearInterval(baseStartWatch); baseStartWatch = null; }
   if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
 }
 
@@ -2333,7 +2284,6 @@ function updateRattle() {
     base.volume = Math.min(1, baseVol);
     base.playbackRate = rate;
     if (base.paused) base.play().catch(() => {});
-    const activeOffset = getRattleStartOffset(base);
   }
 
   // Strong threshold = 0.5 (charge label shows "Strong")
