@@ -1393,6 +1393,7 @@ function startHold() {
   isHolding = true;
   holdStart = Date.now();
   resumeAudio();
+  ensureRattleBuffered();
   if (cupDice.length > 0) startRattle();
   if (shakeStartTimer) {
     clearTimeout(shakeStartTimer);
@@ -2002,9 +2003,11 @@ setTimeout(scheduleCupGlowAlign, 300);
 window.addEventListener('DOMContentLoaded', () => {
   // Small delay to let the page settle
   setTimeout(ensureThudBuffers, 500);
+  setTimeout(ensureRattleBuffered, 500);
 });
 // Also decode immediately in case DOMContentLoaded already fired
 setTimeout(ensureThudBuffers, 500);
+setTimeout(ensureRattleBuffered, 500);
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // AUDIO ENGINE
@@ -2150,9 +2153,76 @@ const RATTLE_3      = document.getElementById('rattle_3');
 const RATTLE_4      = document.getElementById('rattle_4');
 const RATTLE_5      = document.getElementById('rattle_5');
 const RATTLE_STRONG = document.getElementById('rattle_strong');
+const RATTLE_ELEMENTS = [RATTLE_1, RATTLE_3, RATTLE_4, RATTLE_5, RATTLE_STRONG].filter(Boolean);
 
 let activeRattles = []; // currently playing rattle elements
 let strongRattlePlaying = false;
+let rattlesBuffered = false;
+let rattlesBuffering = null;
+const rattlePlayState = new WeakMap();
+
+function preloadAudioElement(el, timeoutMs = 3000) {
+  if (!el) return Promise.resolve();
+  if (el.readyState >= 3) return Promise.resolve();
+  return new Promise(resolve => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      el.removeEventListener('canplaythrough', onReady);
+      el.removeEventListener('canplay', onReady);
+      el.removeEventListener('loadeddata', onReady);
+      el.removeEventListener('error', onDone);
+      resolve();
+    };
+    const onReady = () => finish();
+    const onDone = () => finish();
+    const timer = setTimeout(finish, timeoutMs);
+    el.addEventListener('canplaythrough', onReady, { once: true });
+    el.addEventListener('canplay', onReady, { once: true });
+    el.addEventListener('loadeddata', onReady, { once: true });
+    el.addEventListener('error', onDone, { once: true });
+    try { el.load(); } catch (_) { finish(); }
+  });
+}
+
+function ensureRattleBuffered() {
+  if (rattlesBuffered) return Promise.resolve();
+  if (rattlesBuffering) return rattlesBuffering;
+  rattlesBuffering = Promise.all(RATTLE_ELEMENTS.map(el => preloadAudioElement(el)))
+    .then(() => { rattlesBuffered = true; })
+    .catch(() => {})
+    .finally(() => { rattlesBuffering = null; });
+  return rattlesBuffering;
+}
+
+function requestRattlePlay(el, retries = 8, delay = 90) {
+  if (!el) return;
+  const current = rattlePlayState.get(el);
+  if (current && current.active) return;
+  const state = { active: true };
+  rattlePlayState.set(el, state);
+  let attempts = 0;
+  const finish = () => { state.active = false; };
+  const attemptPlay = () => {
+    if (!isHolding) { finish(); return; }
+    attempts++;
+    let playPromise = null;
+    try { playPromise = el.play(); } catch (_) {}
+    const retry = () => {
+      if (attempts >= retries) { finish(); return; }
+      setTimeout(attemptPlay, delay);
+    };
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(() => finish()).catch(retry);
+      return;
+    }
+    if (el.paused) retry();
+    else finish();
+  };
+  attemptPlay();
+}
 
 function getRattleBase() {
   const count = cupDice.length;
@@ -2244,27 +2314,35 @@ function getBaseFallback(base) {
 function startRattle() {
   stopRattle();
   resumeAudio();
+  ensureRattleBuffered();
   const base = getRattleBase();
   if (!base) return;
   const vol = getVol();
   const baseVol = Math.min(1, Math.max(0.65, vol * 1.1));
   const startOffset = getRattleStartOffset(base);
+  if (base.readyState < 2) {
+    try { base.load(); } catch (_) {}
+  }
   prepareRattleLoop(base, baseVol, 1, startOffset);
-  const playBase = () => base.play().catch(() => {});
-  playBase();
+  requestRattlePlay(base, 10, 80);
   setTimeout(() => {
     if (!isHolding) return;
     if (base.paused || base.currentTime < startOffset + 0.04) {
       prepareRattleLoop(base, baseVol, 1, startOffset);
-      playBase();
+      requestRattlePlay(base, 8, 80);
     }
-  }, 120);
+  }, 160);
   activeRattles = [base];
   strongRattlePlaying = false;
 }
 
 function stopRattle() {
-  activeRattles.forEach(r => { r.pause(); r.currentTime = 0; });
+  activeRattles.forEach(r => {
+    const state = rattlePlayState.get(r);
+    if (state) state.active = false;
+    r.pause();
+    r.currentTime = 0;
+  });
   activeRattles = [];
   strongRattlePlaying = false;
   if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
@@ -2283,7 +2361,7 @@ function updateRattle() {
   if (base) {
     base.volume = Math.min(1, baseVol);
     base.playbackRate = rate;
-    if (base.paused) base.play().catch(() => {});
+    if (base.paused) requestRattlePlay(base, 4, 80);
   }
 
   // Strong threshold = 0.5 (charge label shows "Strong")
@@ -2296,13 +2374,13 @@ function updateRattle() {
       const layerVol = Math.min(1, vol * (0.4 + charge * 0.6));
       const layerTime = base ? base.currentTime : 0;
       prepareRattleLoop(RATTLE_5, layerVol, rate, Math.max(layerTime, getRattleStartOffset(RATTLE_5)));
-      RATTLE_5.play().catch(() => {});
+      requestRattlePlay(RATTLE_5, 8, 80);
       if (!activeRattles.includes(RATTLE_5)) activeRattles.push(RATTLE_5);
     } else {
       // Layer in rattle_strong alongside base
       const layerVol = Math.min(1, vol * 0.6);
       prepareRattleLoop(RATTLE_STRONG, layerVol, rate, getRattleStartOffset(RATTLE_STRONG));
-      RATTLE_STRONG.play().catch(() => {});
+      requestRattlePlay(RATTLE_STRONG, 8, 80);
       if (!activeRattles.includes(RATTLE_STRONG)) activeRattles.push(RATTLE_STRONG);
     }
   }
@@ -2311,7 +2389,7 @@ function updateRattle() {
   if (activeRattles.length > 1) {
     activeRattles[1].volume = Math.min(1, vol * (0.4 + charge * 0.6));
     activeRattles[1].playbackRate = rate;
-    if (activeRattles[1].paused) activeRattles[1].play().catch(() => {});
+    if (activeRattles[1].paused) requestRattlePlay(activeRattles[1], 4, 80);
   }
 }
 
