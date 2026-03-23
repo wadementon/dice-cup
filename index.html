@@ -2012,6 +2012,8 @@ const RATTLE_START_OFFSETS = {
   rattle_5: 1.35,
   rattle_strong: 0.08
 };
+const computedRattleStartOffsets = Object.create(null);
+let rattleOffsetsWarmStarted = false;
 
 function resumeAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -2037,7 +2039,7 @@ function playRattle(intensity = 0.5) {
   bp.Q.value = 1.5;
 
   const g = audioCtx.createGain();
-  g.gain.value = 0.32 + intensity * 0.60;
+  g.gain.value = 0.15 + intensity * 0.45;
 
   src.connect(bp);
   bp.connect(g);
@@ -2153,8 +2155,47 @@ function getVol() {
   return isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
 }
 
+async function detectRattleStartOffset(el) {
+  if (!el || !el.src || !el.id) return;
+  try {
+    const resp = await fetch(el.src);
+    const arr = await resp.arrayBuffer();
+    const buf = await audioCtx.decodeAudioData(arr.slice(0));
+    if (!buf || !buf.length) return;
+    const ch = buf.getChannelData(0);
+    const win = 1024;
+    const step = 256;
+    const threshold = 0.012;
+    let idx = 0;
+    let found = false;
+    for (let i = 0; i < ch.length - win; i += step) {
+      let sum = 0;
+      for (let j = 0; j < win; j++) sum += Math.abs(ch[i + j]);
+      const avg = sum / win;
+      if (avg > threshold) {
+        idx = i;
+        found = true;
+        break;
+      }
+    }
+    let offset = found ? Math.max(0, idx / buf.sampleRate - 0.03) : 0;
+    const maxStart = Math.max(0, buf.duration - 0.2);
+    computedRattleStartOffsets[el.id] = Math.min(offset, maxStart);
+  } catch (_) {}
+}
+
+function warmRattleStartOffsets() {
+  if (rattleOffsetsWarmStarted) return;
+  rattleOffsetsWarmStarted = true;
+  const els = [RATTLE_1, RATTLE_3, RATTLE_4, RATTLE_5, RATTLE_STRONG].filter(Boolean);
+  Promise.all(els.map(detectRattleStartOffset)).catch(() => {});
+}
+
 function getRattleStartOffset(el) {
   if (!el || !el.id) return BASE_RATTLE_START_OFFSET;
+  if (Object.prototype.hasOwnProperty.call(computedRattleStartOffsets, el.id)) {
+    return computedRattleStartOffsets[el.id];
+  }
   return Object.prototype.hasOwnProperty.call(RATTLE_START_OFFSETS, el.id)
     ? RATTLE_START_OFFSETS[el.id]
     : BASE_RATTLE_START_OFFSET;
@@ -2232,7 +2273,7 @@ function getBaseFallback(base) {
 function startRattle() {
   stopRattle();
   resumeAudio();
-  startSyntheticRattle();
+  warmRattleStartOffsets();
   const base = getRattleBase();
   const vol = getVol();
   const baseVol = Math.min(1, Math.max(0.65, vol * 1.1));
@@ -2256,7 +2297,6 @@ function startRattle() {
     if (!currentBase) return;
     const activeOffset = getRattleStartOffset(currentBase);
     if (!currentBase.paused && currentBase.currentTime > activeOffset + 0.15) {
-      if (rattleInterval) { clearInterval(rattleInterval); rattleInterval = null; }
       clearInterval(baseStartWatch);
       baseStartWatch = null;
       return;
@@ -2265,10 +2305,11 @@ function startRattle() {
       try { currentBase.currentTime = activeOffset; } catch (_) {}
     }
     currentBase.play().catch(() => {});
-    if (tries >= 1 && !rattleInterval) startSyntheticRattle();
     tries++;
   }, 120);
 }
+
+setTimeout(warmRattleStartOffsets, 0);
 
 function stopRattle() {
   activeRattles.forEach(r => { r.pause(); r.currentTime = 0; });
@@ -2293,10 +2334,6 @@ function updateRattle() {
     base.playbackRate = rate;
     if (base.paused) base.play().catch(() => {});
     const activeOffset = getRattleStartOffset(base);
-    if (!base.paused && base.currentTime > activeOffset + 0.15 && rattleInterval) {
-      clearInterval(rattleInterval);
-      rattleInterval = null;
-    }
   }
 
   // Strong threshold = 0.5 (charge label shows "Strong")
