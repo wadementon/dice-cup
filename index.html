@@ -822,6 +822,7 @@
 
 <header>
   <div class="volume-control">
+<audio id="dice_select" src="assets/dice_select.mp3" preload="auto"></audio>
     <div class="volume-icon" id="volumeIcon">vol</div>
     <input class="volume-slider" id="volumeSlider" type="range" min="0" max="1" step="0.01" value="0.6">
   </div>
@@ -1183,6 +1184,9 @@ function updateCupUI() {
 function addToCup(d) {
   if (cupDice.length >= 20) return; // cap
   cupDice.push(d.type);
+  resumeAudio();
+  ensureThudBuffers();
+  playThudBuffer('dice_select');
   updateCupUI();
 }
 
@@ -2108,13 +2112,25 @@ async function ensureThudBuffers() {
   if (thudsDecoded) return;
   thudsDecoded = true;
   const ids = ['thud_d4','thud_d6','thud_d8','thud_d10','thud_d12','thud_d20',
-               'thud_var1','thud_var2','thud_var3','thud_var4','thud_var5','thud_var6'];
+               'thud_var1','thud_var2','thud_var3','thud_var4','thud_var5','thud_var6','dice_select'];
   await Promise.all(ids.map(decodeThudBuffer));
 }
 
 function playThudBuffer(id) {
   const buf = THUD_BUFFERS[id];
-  if (!buf) return;
+  if (!buf) {
+    // Fallback so first-click sounds still play while buffers decode.
+    const el = document.getElementById(id);
+    if (el) {
+      try {
+        el.currentTime = 0;
+        el.volume = isMuted ? 0 : (parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6);
+        const p = el.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (_) {}
+    }
+    return;
+  }
   const src = audioCtx.createBufferSource();
   src.buffer = buf;
   const g = audioCtx.createGain();
