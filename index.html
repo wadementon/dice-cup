@@ -2102,27 +2102,6 @@ function playRattle(intensity = 0.5) {
 }
 
 // Thud sound system â€” signature per die type + variation pool
-const THUD_SIGS = {
-  D4:  document.getElementById('thud_d4'),
-  D6:  document.getElementById('thud_d6'),
-  D8:  document.getElementById('thud_d8'),
-  D10: document.getElementById('thud_d10'),
-  D12: document.getElementById('thud_d12'),
-  D20: document.getElementById('thud_d20'),
-};
-// var1, var4, var6 = small dice only (D4/D6 extras)
-// var2, var3, var5 = all other dice sizes
-const THUD_VARS_SMALL = [
-  document.getElementById('thud_var1'),
-  document.getElementById('thud_var4'),
-  document.getElementById('thud_var6'),
-];
-const THUD_VARS_ALL = [
-  document.getElementById('thud_var2'),
-  document.getElementById('thud_var3'),
-  document.getElementById('thud_var5'),
-];
-
 // Track how many of each type have already played this roll
 const _thudCounts = {};
 
