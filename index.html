@@ -1057,7 +1057,7 @@ function buildPickerBar() {
     btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
     btn.title = `Add ${d.type} â€” hold to change color`;
 
-    let tapHandledByTouch = false;
+    let suppressClickUntil = 0;
 
     // Long press detection
     btn.addEventListener('mousedown', e => {
@@ -1095,14 +1095,13 @@ function buildPickerBar() {
         return;
       }
       // Handle tap directly on touch devices so audio runs inside touch gesture.
-      tapHandledByTouch = true;
+      suppressClickUntil = Date.now() + 900;
       e.preventDefault();
       addToCup(d);
-      setTimeout(() => { tapHandledByTouch = false; }, 350);
     }, { passive: false });
 
     btn.addEventListener('click', e => {
-      if (tapHandledByTouch) return;
+      if (Date.now() < suppressClickUntil) return;
       if (longPressFired) { longPressFired = false; return; }
       addToCup(d);
     });
@@ -2173,50 +2172,24 @@ function playThudBuffer(id) {
   src.start();
 }
 
-const DICE_SELECT_POOL = [];
-let diceSelectPoolIndex = 0;
-
-function getDiceSelectPool() {
-  if (DICE_SELECT_POOL.length) return DICE_SELECT_POOL;
-  const base = document.getElementById('dice_select');
-  if (!base) return DICE_SELECT_POOL;
-  DICE_SELECT_POOL.push(base);
-  for (let i = 0; i < 3; i++) {
-    const clone = base.cloneNode(true);
-    clone.removeAttribute('id');
-    clone.preload = 'auto';
-    clone.style.display = 'none';
-    document.body.appendChild(clone);
-    DICE_SELECT_POOL.push(clone);
-  }
-  return DICE_SELECT_POOL;
-}
-
-function playDiceSelectElement(vol) {
-  const pool = getDiceSelectPool();
-  if (!pool.length) return false;
-
-  const available = pool.find(el => el.paused || el.ended);
-  const target = available || pool[diceSelectPoolIndex];
-  diceSelectPoolIndex = (diceSelectPoolIndex + 1) % pool.length;
-  if (!target) return false;
-
-  try {
-    target.currentTime = 0;
-    target.volume = vol;
-    const p = target.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
 function playDiceSelect() {
   if (isMuted) return;
   resumeAudio();
   const vol = parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6;
-  playDiceSelectElement(vol);
+  const el = document.getElementById('dice_select');
+  if (el) {
+    try {
+      el.pause();
+      el.currentTime = 0;
+      el.volume = vol;
+      const p = el.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(() => playThudBuffer('dice_select'));
+      }
+      return;
+    } catch (_) {}
+  }
+  playThudBuffer('dice_select');
 }
 
  
