@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -996,8 +996,14 @@ let longPressTimer = null;
 let longPressFired = false;
 
 function rebuildBtn(btn, d) {
-  btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
-}
+    let shapeMarkup = '';
+    try {
+      shapeMarkup = dieShape(d, d.size);
+    } catch (e) {
+      console.warn('dieShape failed for', d.type, e);
+      shapeMarkup = '';
+    }
+    btn.innerHTML = shapeMarkup + '<span class="die-label">' + d.type + '</span>';}
 
 function openColorPicker(btn, d) {
   activeDieForColor = d;
@@ -1054,7 +1060,7 @@ function buildPickerBar() {
     const btn = document.createElement('button');
     btn.className = 'die-btn';
     btn._dieRef = d;
-    btn.innerHTML = dieShape(d, d.size) + `<span class="die-label">${d.type}</span>`;
+    rebuildBtn(btn, d);
     btn.title = `Add ${d.type} Ã¢â‚¬â€ hold to change color`;
 
     let tapHandledByTouch = false;
@@ -1115,7 +1121,24 @@ function buildPickerBar() {
 const imageLoadPromises = Object.values(DIE_IMAGES).map(img =>
   img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })
 );
-Promise.all(imageLoadPromises).then(buildPickerBar);
+
+let pickerBuilt = false;
+function ensurePickerBuilt() {
+  if (pickerBuilt) return;
+  pickerBuilt = true;
+  buildPickerBar();
+}
+
+setTimeout(ensurePickerBuilt, 0);
+Promise.all(imageLoadPromises).then(() => {
+  if (!pickerBuilt) {
+    ensurePickerBuilt();
+    return;
+  }
+  [...diceBar.children].forEach((btn, i) => {
+    if (DICE[i]) rebuildBtn(btn, DICE[i]);
+  });
+});
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 // CUP STATE
