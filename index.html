@@ -1063,6 +1063,7 @@ function buildPickerBar() {
     btn.addEventListener('mousedown', e => {
       resumeAudio();
       ensureThudBuffers();
+      ensureDiceSelectBuffer();
       preloadAudioElement(document.getElementById('dice_select'));
       longPressFired = false;
       longPressTimer = setTimeout(() => {
@@ -1074,6 +1075,7 @@ function buildPickerBar() {
       // Prime mobile audio in a direct touch gesture.
       resumeAudio();
       ensureThudBuffers();
+      ensureDiceSelectBuffer();
       preloadAudioElement(document.getElementById('dice_select'));
       longPressFired = false;
       longPressTimer = setTimeout(() => {
@@ -1208,6 +1210,7 @@ function addToCup(d) {
   cupDice.push(d.type);
   resumeAudio();
   ensureThudBuffers();
+  ensureDiceSelectBuffer();
   playDiceSelect();
   updateCupUI();
 }
@@ -2030,11 +2033,13 @@ window.addEventListener('DOMContentLoaded', () => {
   // Small delay to let the page settle
   setTimeout(() => preloadAudioElement(document.getElementById('dice_select')), 0);
   setTimeout(ensureThudBuffers, 500);
+  setTimeout(ensureDiceSelectBuffer, 500);
   setTimeout(ensureRattleBuffered, 0);
 });
 // Also decode immediately in case DOMContentLoaded already fired
 setTimeout(() => preloadAudioElement(document.getElementById('dice_select')), 0);
 setTimeout(ensureThudBuffers, 500);
+setTimeout(ensureDiceSelectBuffer, 500);
 setTimeout(ensureRattleBuffered, 0);
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -2127,6 +2132,8 @@ function resetThudCounts() {
 
 // Decode all thud audio elements into Web Audio buffers for polyphonic playback
 const THUD_BUFFERS = {};
+let diceSelectBuffer = null;
+let diceSelectDecodePromise = null;
 
 async function decodeThudBuffer(id) {
   const el = document.getElementById(id);
@@ -2146,6 +2153,21 @@ async function ensureThudBuffers() {
   const ids = ['thud_d4','thud_d6','thud_d8','thud_d10','thud_d12','thud_d20',
                'thud_var1','thud_var2','thud_var3','thud_var4','thud_var5','thud_var6'];
   await Promise.all(ids.map(decodeThudBuffer));
+}
+
+function ensureDiceSelectBuffer() {
+  if (diceSelectBuffer) return Promise.resolve();
+  if (diceSelectDecodePromise) return diceSelectDecodePromise;
+  const el = document.getElementById('dice_select');
+  if (!el || !el.src) return Promise.resolve();
+
+  diceSelectDecodePromise = fetch(el.src)
+    .then(resp => resp.arrayBuffer())
+    .then(arr => audioCtx.decodeAudioData(arr.slice(0)))
+    .then(buf => { diceSelectBuffer = buf; })
+    .catch(e => { console.warn('Could not decode dice_select', e); })
+    .finally(() => { diceSelectDecodePromise = null; });
+  return diceSelectDecodePromise;
 }
 
 function playThudBuffer(id) {
@@ -2172,10 +2194,25 @@ function playThudBuffer(id) {
   src.start();
 }
 
+function playDiceSelectBuffer(vol) {
+  if (!diceSelectBuffer) return false;
+  const src = audioCtx.createBufferSource();
+  src.buffer = diceSelectBuffer;
+  const g = audioCtx.createGain();
+  g.gain.value = Math.max(0, Math.min(1, vol));
+  src.connect(g);
+  g.connect(masterGain);
+  src.start();
+  return true;
+}
+
 function playDiceSelect() {
   if (isMuted) return;
   resumeAudio();
   const vol = parseFloat(volumeSlider ? volumeSlider.value : '0.6') || 0.6;
+  if (playDiceSelectBuffer(vol)) return;
+
+  ensureDiceSelectBuffer();
   const el = document.getElementById('dice_select');
   if (el) {
     try {
@@ -2183,13 +2220,10 @@ function playDiceSelect() {
       el.currentTime = 0;
       el.volume = vol;
       const p = el.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(() => playThudBuffer('dice_select'));
-      }
+      if (p && typeof p.catch === 'function') p.catch(() => {});
       return;
     } catch (_) {}
   }
-  playThudBuffer('dice_select');
 }
 
  
